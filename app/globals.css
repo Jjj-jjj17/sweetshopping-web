@@ -10,6 +10,15 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+
+  /* Spec v2 Design Tokens */
+  --color-text-primary: #111827;   /* gray-900 */
+  --color-text-secondary: #374151; /* gray-700 - increased contrast from 600 */
+  --color-text-muted: #6b7280;     /* gray-500 */
+  --color-surface: #ffffff;
+  --color-border: #e5e7eb;         /* gray-200 */
+  --color-error: #dc2626;          /* red-600 - high contrast */
+  --color-success: #16a34a;        /* green-600 */
 }
 
 @media (prefers-color-scheme: dark) {
@@ -21,6 +30,26 @@
 
 body {
   background: var(--background);
-  color: var(--foreground);
+  color: var(--color-text-primary); /* Default to high contrast */
   font-family: Arial, Helvetica, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Base styles for clearer headings */
+h1, h2, h3, h4, h5, h6 {
+  color: var(--color-text-primary);
+  font-weight: 700;
+}
+
+label {
+  color: var(--color-text-secondary);
+  font-weight: 500;
+}
+
+input, select, textarea {
+  border-color: var(--color-border);
+  color: var(--color-text-primary);
+}
+input::placeholder {
+  color: var(--color-text-muted);
 }
