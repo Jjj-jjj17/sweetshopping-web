@@ -26,14 +26,21 @@ try {
   console.warn("DEBUG: Failed to parse/decode DATABASE_URL, using original.", e);
 }
 
+// SSL Configuration: Secure by default in production
+const isProd = process.env.NODE_ENV === "production";
+const rejectUnauthorized =
+  process.env.DB_SSL_REJECT_UNAUTHORIZED != null
+    ? process.env.DB_SSL_REJECT_UNAUTHORIZED !== "false"
+    : isProd;
+
+console.log(`DEBUG: SSL rejectUnauthorized=${rejectUnauthorized} (isProd=${isProd})`);
+
 const pool = new Pool({
   connectionString,
-  max: 20, // Increase pool size
+  max: 20,
   idleTimeoutMillis: 30000,
   connectionTimeoutMillis: 10000,
-  ssl: {
-    rejectUnauthorized: false // Required for many cloud providers (Neon, Supabase, etc)
-  }
+  ssl: { rejectUnauthorized }
 });
 const adapter = new PrismaPg(pool);
 
