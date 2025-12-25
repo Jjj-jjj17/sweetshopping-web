@@ -2,17 +2,14 @@
  * Payment Reminder Cron API
  * 
  * Phase 1 Approach:
- * - This endpoint is called by an external cron service (e.g., Vercel Cron, cron-job.org)
- * - Runs every hour (recommended) or at ~20h mark
- * - Finds unpaid orders created 18-24 hours ago and sends reminders
+ * - Called by external cron service via POST /api/cron/payment-reminder
+ * - Requires Authorization: Bearer <CRON_SECRET>
+ * - Runs every hour to catch unpaid orders 18-24h old
  * 
  * Security:
- * - Protected by CRON_SECRET env var
- * - Returns 401 if secret doesn't match
- * 
- * Usage:
- * - Set up external cron to call: POST /api/cron/payment-reminder
- * - Include header: Authorization: Bearer <CRON_SECRET>
+ * - Returns 401 for all auth failures
+ * - Logs generic errors only
+ * - Deduplication via AuditLog (no re-sends)
  */
 
 import { NextRequest, NextResponse } from 'next/server';
@@ -20,53 +17,61 @@ import { prisma } from '@/lib/prisma';
 import { sendPaymentReminderEmail } from '@/lib/mailer';
 
 export async function POST(request: NextRequest) {
-    // 1. Verify CRON_SECRET
+    // 1. Hardened Auth Check
     const authHeader = request.headers.get('authorization');
     const expectedSecret = process.env.CRON_SECRET;
 
+    // Strict verification: must match exactly and secret must be present
     if (!expectedSecret || authHeader !== `Bearer ${expectedSecret}`) {
+        // Log generic failure, do NOT log the header or secret
         console.warn('[Cron] Unauthorized payment reminder attempt');
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // 2. Find unpaid orders in the reminder window (18-24 hours old)
+    // 2. Find candidate orders (18-24 hours old, unpaid)
     const now = new Date();
     const twentyFourHoursAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
     const eighteenHoursAgo = new Date(now.getTime() - 18 * 60 * 60 * 1000);
 
     try {
-        // Find orders that:
-        // - Are still in PENDING_CONFIRMATION or PENDING_PAYMENT (unpaid)
-        // - Were created between 18-24 hours ago
         const unpaidOrders = await prisma.order.findMany({
             where: {
-                status: {
-                    in: ['PENDING_CONFIRMATION', 'PENDING_PAYMENT']
-                },
+                status: { in: ['PENDING_CONFIRMATION', 'PENDING_PAYMENT'] },
                 createdAt: {
                     gte: twentyFourHoursAgo,
                     lte: eighteenHoursAgo
                 },
-                email: {
-                    not: null
-                }
+                email: { not: null }
             },
             include: {
-                variants: {
-                    include: {
-                        product: true
-                    }
-                }
+                variants: { include: { product: true } }
             }
         });
 
-        console.log(`[Cron] Found ${unpaidOrders.length} orders for payment reminder`);
+        console.log(`[Cron] Found ${unpaidOrders.length} candidate orders`);
 
         const results = [];
 
         for (const order of unpaidOrders) {
             try {
-                await sendPaymentReminderEmail({
+                // 3. Deduplication: Check AuditLog to see if already sent
+                // This avoids schema changes (P0 conservative approach)
+                const alreadySent = await prisma.auditLog.findFirst({
+                    where: {
+                        entityType: "ORDER",
+                        entityId: order.id,
+                        action: "PAYMENT_REMINDER_SENT"
+                    }
+                });
+
+                if (alreadySent) {
+                    console.log(`[Cron] Skipping ${order.orderNo} - reminder already sent`);
+                    results.push({ orderNo: order.orderNo, status: 'skipped' });
+                    continue;
+                }
+
+                // 4. Send Email
+                const emailResult = await sendPaymentReminderEmail({
                     orderNo: order.orderNo,
                     customerName: order.customerName,
                     email: order.email!,
@@ -77,16 +82,32 @@ export async function POST(request: NextRequest) {
                     }))
                 });
 
-                results.push({ orderNo: order.orderNo, status: 'sent' });
-            } catch (emailError) {
-                console.error(`[Cron] Failed to send reminder for ${order.orderNo}:`, emailError);
-                results.push({ orderNo: order.orderNo, status: 'failed', error: String(emailError) });
+                if (emailResult.success) {
+                    // 5. Record Sentinel in AuditLog
+                    await prisma.auditLog.create({
+                        data: {
+                            action: "PAYMENT_REMINDER_SENT",
+                            entityType: "ORDER",
+                            entityId: order.id,
+                            actorUserId: "SYSTEM", // System actor
+                            oldValue: {},
+                            newValue: { sentAt: new Date() }
+                        }
+                    });
+                    results.push({ orderNo: order.orderNo, status: 'sent' });
+                } else {
+                    results.push({ orderNo: order.orderNo, status: 'failed', error: 'Email failed' });
+                }
+
+            } catch (innerError) {
+                console.error(`[Cron] Error processing ${order.orderNo}:`, innerError);
+                results.push({ orderNo: order.orderNo, status: 'failed', error: 'Processing error' });
             }
         }
 
         return NextResponse.json({
             success: true,
-            processed: unpaidOrders.length,
+            processed: results.length,
             results
         });
 
@@ -94,13 +115,4 @@ export async function POST(request: NextRequest) {
         console.error('[Cron] Payment reminder job failed:', error);
         return NextResponse.json({ error: 'Internal error' }, { status: 500 });
     }
-}
-
-// Also allow GET for health checks
-export async function GET(request: NextRequest) {
-    return NextResponse.json({
-        endpoint: 'payment-reminder',
-        method: 'POST with Authorization: Bearer <CRON_SECRET>',
-        description: 'Sends payment reminders for unpaid orders (18-24h old)'
-    });
 }
