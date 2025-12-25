@@ -8,6 +8,7 @@ import { redirect } from "next/navigation";
 import { CartItem } from "@/lib/cart"; // Type only
 import { isValidOrderDate, validateCartBusinessRules, MIN_ORDER_SUBTOTAL } from "@/lib/business";
 import { OrderState, validateTransition } from "@/lib/orderStateMachine";
+import { sendOrderConfirmationEmail, sendPaymentReceivedEmail } from "@/lib/mailer";
 
 // Placeholder functions removed - using imported versions from @/lib/business
 
@@ -122,14 +123,37 @@ export async function placeOrder(cartItems: any[], formData: FormData) {
 
             customerName: validation.data.name,
             phone: validation.data.phone,
+            email: session.user.email, // Save user's email for notifications
 
             variants: { // Correct relation name
                 create: orderItemsData
             }
+        },
+        include: {
+            variants: {
+                include: {
+                    product: true
+                }
+            }
         }
     });
 
-    // TODO: Send email notification?
+    // Send Order Confirmation Email
+    try {
+        await sendOrderConfirmationEmail({
+            orderNo: order.orderNo,
+            customerName: order.customerName,
+            email: order.email || session.user.email || '',
+            totalAmount: Number(order.totalAmount),
+            items: order.variants.map(v => ({
+                productName: v.product?.name || 'Unknown Product',
+                quantity: v.quantity
+            }))
+        });
+    } catch (emailError) {
+        console.error('[Orders] Failed to send confirmation email:', emailError);
+        // Don't fail the order if email fails
+    }
 
     revalidatePath("/admin/orders");
     return { success: true, orderId: order.id };
@@ -166,9 +190,14 @@ export async function updateOrderStatus(formData: FormData) {
     }
 
     // 4. Apply Update
-    await prisma.order.update({
+    const updatedOrder = await prisma.order.update({
         where: { id: orderId },
-        data: { status: targetStatus }
+        data: { status: targetStatus },
+        include: {
+            variants: {
+                include: { product: true }
+            }
+        }
     });
 
     // 5. Audit Log (Required for all state changes)
@@ -183,7 +212,26 @@ export async function updateOrderStatus(formData: FormData) {
         }
     });
 
-    // 6. Revalidate UI
+    // 6. Send Payment Received Email (when moving to PAYMENT_CONFIRMED)
+    if (targetStatus === "PAYMENT_CONFIRMED" && updatedOrder.email) {
+        try {
+            await sendPaymentReceivedEmail({
+                orderNo: updatedOrder.orderNo,
+                customerName: updatedOrder.customerName,
+                email: updatedOrder.email,
+                totalAmount: Number(updatedOrder.totalAmount),
+                items: updatedOrder.variants.map(v => ({
+                    productName: v.product?.name || 'Unknown Product',
+                    quantity: v.quantity
+                }))
+            });
+        } catch (emailError) {
+            console.error('[Orders] Failed to send payment received email:', emailError);
+            // Don't fail the status update if email fails
+        }
+    }
+
+    // 7. Revalidate UI
     revalidatePath(`/admin/orders/${orderId}`);
     revalidatePath("/admin/orders");
     revalidatePath("/admin/dashboard");
