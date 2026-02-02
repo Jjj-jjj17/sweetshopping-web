@@ -1,0 +1,48 @@
+{
+  "name": "sweetshopping",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "next dev --webpack",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint",
+    "db:verify": "npx tsx scripts/check-db.ts",
+    "deploy:check": "npm run lint && npx vitest run && npm run db:verify"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.93.3",
+    "browser-image-compression": "^2.0.2",
+    "clsx": "^2.1.1",
+    "crypto-js": "^4.2.0",
+    "dompurify": "^3.3.1",
+    "lucide-react": "^0.563.0",
+    "next": "16.1.5",
+    "next-pwa": "^5.6.0",
+    "react": "19.2.3",
+    "react-dom": "19.2.3",
+    "sonner": "^2.0.7",
+    "tailwind-merge": "^3.4.0",
+    "zod": "^4.3.6"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.58.1",
+    "@tailwindcss/postcss": "^4",
+    "@types/crypto-js": "^4.2.2",
+    "@types/dompurify": "^3.0.5",
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "@vitejs/plugin-react": "^5.1.2",
+    "dotenv": "^17.2.3",
+    "eslint": "^9",
+    "eslint-config-next": "16.1.5",
+    "jsdom": "^27.4.0",
+    "tailwindcss": "^4",
+    "tsx": "^4.21.0",
+    "typescript": "^5",
+    "vite": "^7.3.1",
+    "vitest": "^4.0.18"
+  }
+}

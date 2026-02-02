@@ -1,0 +1,45 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e1]:
+  - generic [ref=e2]:
+    - banner [ref=e3]:
+      - link "SweetShop" [ref=e4] [cursor=pointer]:
+        - /url: /
+      - link "Cart" [ref=e6] [cursor=pointer]:
+        - /url: /cart
+        - button "Cart" [ref=e7]:
+          - img [ref=e8]
+          - text: Cart
+    - generic [ref=e12]:
+      - heading "Fresh Handmade Desserts" [level=2] [ref=e13]
+      - generic [ref=e14]:
+        - img [ref=e15]
+        - textbox "Search for something sweet..." [ref=e18]
+      - generic [ref=e19]:
+        - button "All" [ref=e20]
+        - button "Cake" [ref=e21]
+        - button "Cookie" [ref=e22]
+        - button "Bread" [ref=e23]
+        - button "Gift Box" [ref=e24]
+    - main [ref=e25]:
+      - generic [ref=e27]:
+        - link "No Photo" [active] [ref=e28] [cursor=pointer]:
+          - /url: /product/e2e-product-1
+          - generic [ref=e29]: No Photo
+        - heading "E2E Cake $75" [level=3] [ref=e31]:
+          - link "E2E Cake" [ref=e32] [cursor=pointer]:
+            - /url: /product/e2e-product-1
+          - generic [ref=e33]: $75
+        - generic [ref=e34]: Delicious Test Cake
+        - button "Add to Cart" [ref=e36]
+  - region "Notifications alt+T"
+  - button "Open Next.js Dev Tools" [ref=e42] [cursor=pointer]:
+    - generic [ref=e45]:
+      - text: Compiling
+      - generic [ref=e46]:
+        - generic [ref=e47]: .
+        - generic [ref=e48]: .
+        - generic [ref=e49]: .
+  - alert [ref=e50]
+```
