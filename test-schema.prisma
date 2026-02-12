@@ -1,0 +1,15 @@
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "./test-client"
+  engineType = "library"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = "postgres://postgres:postgres@localhost:51214/template1"
+}
+
+model User {
+  id String @id @default(cuid())
+}

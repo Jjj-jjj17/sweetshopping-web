@@ -51,42 +51,59 @@ export default function AdminCalendarClient() {
     };
 
     const handleToggle = async (day: number) => {
-        const targetDate = new Date(year, month, day);
-        // Reset time to avoid timezone offsets causing issues locally vs server
-        targetDate.setHours(0, 0, 0, 0);
+        // Construct strict YYYY-MM-DD date string to avoid timezone issues
+        // Create date object at NOON to be safe from shifts when formatting, or just string manipulation
+        const targetDate = new Date(year, month, day, 12, 0, 0);
+        const dateStr = targetDate.toISOString().split("T")[0]; // YYYY-MM-DD
+
+        // Re-parse for local logic
+        const checkDate = new Date(dateStr);
+        const dayOfWeek = checkDate.getDay();
+        const isDefaultOpen = dayOfWeek === 0 || dayOfWeek === 6;
 
         // Check local state for override
-        const existing = overrides.find(o => new Date(o.date).toDateString() === targetDate.toDateString());
+        const existingIndex = overrides.findIndex(o => {
+            const oDate = new Date(o.date).toISOString().split("T")[0];
+            return oDate === dateStr;
+        });
+        const existing = existingIndex >= 0 ? overrides[existingIndex] : null;
 
-        // Logic: 
-        // If Weekend (Default Open) -> Toggle to Closed -> Toggle to Default (Delete?)
-        // If Weekday (Default Closed) -> Toggle to Open -> Toggle to Default (Delete?)
-
-        // For MVP, let's keep it simple: Click toggles boolean enabled/disabled.
-        // We need to know if it is currently "Production Ready".
-        const isWeekend = targetDate.getDay() === 0 || targetDate.getDay() === 6;
-        const isCurrentlyOpen = existing ? existing.enabled : isWeekend;
-
-        const newState = !isCurrentlyOpen;
-        const reason = newState ? "Opened by Admin" : "Closed by Admin";
+        // Determine next state
+        const isCurrentlyOpen = existing ? existing.enabled : isDefaultOpen;
+        const targetState = !isCurrentlyOpen;
 
         // Optimistic Update
-        const tempOverrides = [...overrides];
-        const existingIndex = tempOverrides.findIndex(o => new Date(o.date).toDateString() === targetDate.toDateString());
+        const newOverrides = [...overrides];
 
-        if (existingIndex >= 0) {
-            tempOverrides[existingIndex].enabled = newState;
+        if (targetState === isDefaultOpen) {
+            // Remove override if returning to default
+            if (existingIndex >= 0) {
+                newOverrides.splice(existingIndex, 1);
+            }
         } else {
-            tempOverrides.push({ date: targetDate, enabled: newState, reason });
+            // Add/Update override
+            const newOverride = {
+                date: new Date(dateStr), // Store as object for consistency with received props
+                enabled: targetState,
+                reason: targetState ? "Opened by Admin" : "Closed by Admin"
+            };
+
+            if (existingIndex >= 0) {
+                newOverrides[existingIndex] = newOverride;
+            } else {
+                newOverrides.push(newOverride);
+            }
         }
-        setOverrides(tempOverrides);
+
+        setOverrides(newOverrides);
 
         try {
-            await toggleProductionDate(targetDate.toISOString(), newState, reason);
+            await toggleProductionDate(dateStr);
         } catch (e) {
             console.error(e);
             alert("Failed to save changes");
-            // Revert on error would go here
+            // Revert state
+            setOverrides(overrides);
         }
     };
 

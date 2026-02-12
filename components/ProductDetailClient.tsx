@@ -13,7 +13,9 @@ type ProductWithDetails = Omit<Product, "price"> & {
 
 export default function ProductDetailClient({ product }: { product: ProductWithDetails }) {
     const [mainImage, setMainImage] = useState(product.images[0]?.url || "/placeholder-dessert.jpg");
-    const [quantity, setQuantity] = useState(1);
+    // Enforce Variant MOQ of 10
+    const MIN_VARIANT_QUANTITY = 10;
+    const [quantity, setQuantity] = useState(MIN_VARIANT_QUANTITY);
     const [customization, setCustomization] = useState<Record<string, string>>({});
     const [error, setError] = useState("");
     const [success, setSuccess] = useState("");
@@ -22,10 +24,43 @@ export default function ProductDetailClient({ product }: { product: ProductWithD
         setError("");
         setSuccess("");
 
-        // Validate required fields
-        const missingFields = product.fields.filter(f => f.required && !customization[f.fieldKey]);
+        // 1. Validate MOQ
+        if (quantity < MIN_VARIANT_QUANTITY) {
+            setError(`Minimum quantity per item is ${MIN_VARIANT_QUANTITY}.`);
+            return;
+        }
+
+        // 2. Validate Fields
+        const missingFields = [];
+        const invalidFields = [];
+
+        for (const field of product.fields) {
+            const value = customization[field.fieldKey] || "";
+
+            // Required check
+            if (field.required && !value) {
+                missingFields.push(field.label);
+                continue;
+            }
+
+            // Text validation (if value exists)
+            if (field.type === "TEXT" && value) {
+                if (field.minChars && value.length < field.minChars) {
+                    invalidFields.push(`${field.label} (min ${field.minChars} chars)`);
+                }
+                if (field.maxChars && value.length > field.maxChars) {
+                    invalidFields.push(`${field.label} (max ${field.maxChars} chars)`);
+                }
+            }
+        }
+
         if (missingFields.length > 0) {
-            setError(`Please select options for: ${missingFields.map(f => f.label).join(", ")}`);
+            setError(`Please select options for: ${missingFields.join(", ")}`);
+            return;
+        }
+
+        if (invalidFields.length > 0) {
+            setError(`Invalid input: ${invalidFields.join(", ")}`);
             return;
         }
 
@@ -73,6 +108,7 @@ export default function ProductDetailClient({ product }: { product: ProductWithD
                 <div>
                     <h1 className="text-3xl font-bold text-gray-900">{product.name}</h1>
                     <p className="text-2xl font-medium text-gray-900 mt-2">TWD ${Number(product.price).toFixed(0)}</p>
+                    <p className="text-sm text-gray-500 mt-1">Minimum Order Qty (MOQ): {MIN_VARIANT_QUANTITY} per item</p>
                 </div>
 
                 <div className="prose text-gray-500">
@@ -89,6 +125,14 @@ export default function ProductDetailClient({ product }: { product: ProductWithD
                             <div key={field.id}>
                                 <label className="block text-sm font-medium text-gray-700 mb-2">
                                     {field.label} {field.required && <span className="text-red-500">*</span>}
+                                    {field.type === "TEXT" && (field.minChars || field.maxChars) && (
+                                        <span className="text-xs text-gray-400 ml-2">
+                                            ({[
+                                                field.minChars && `Min: ${field.minChars}`,
+                                                field.maxChars && `Max: ${field.maxChars}`
+                                            ].filter(Boolean).join(", ")})
+                                        </span>
+                                    )}
                                 </label>
                                 {field.type === "ENUM" ? (
                                     <div className="flex flex-wrap gap-2">
@@ -106,13 +150,32 @@ export default function ProductDetailClient({ product }: { product: ProductWithD
                                         ))}
                                     </div>
                                 ) : (
-                                    <input
-                                        type="text"
-                                        className="w-full border-gray-300 rounded-md shadow-sm focus:border-black focus:ring-black"
-                                        placeholder={`Enter ${field.label}`}
-                                        onChange={(e) => setCustomization(prev => ({ ...prev, [field.fieldKey]: e.target.value }))}
-                                        value={customization[field.fieldKey] || ""}
-                                    />
+                                    <div className="relative">
+                                        {field.maxChars && field.maxChars > 60 ? (
+                                            <textarea
+                                                className="w-full border-gray-300 rounded-md shadow-sm focus:border-black focus:ring-black"
+                                                placeholder={`Enter ${field.label}...`}
+                                                rows={3}
+                                                maxLength={field.maxChars || undefined}
+                                                onChange={(e) => setCustomization(prev => ({ ...prev, [field.fieldKey]: e.target.value }))}
+                                                value={customization[field.fieldKey] || ""}
+                                            />
+                                        ) : (
+                                            <input
+                                                type="text"
+                                                className="w-full border-gray-300 rounded-md shadow-sm focus:border-black focus:ring-black"
+                                                placeholder={`Enter ${field.label}`}
+                                                maxLength={field.maxChars || undefined}
+                                                onChange={(e) => setCustomization(prev => ({ ...prev, [field.fieldKey]: e.target.value }))}
+                                                value={customization[field.fieldKey] || ""}
+                                            />
+                                        )}
+                                        {field.maxChars && (
+                                            <div className="text-xs text-right text-gray-400 mt-1">
+                                                {(customization[field.fieldKey] || "").length} / {field.maxChars}
+                                            </div>
+                                        )}
+                                    </div>
                                 )}
                             </div>
                         ))}
@@ -121,14 +184,15 @@ export default function ProductDetailClient({ product }: { product: ProductWithD
 
                 {/* Add to Cart Actions */}
                 <div className="pt-4 space-y-4">
-                    {error && <p className="text-red-600 text-sm">{error}</p>}
-                    {success && <p className="text-green-600 text-sm">{success}</p>}
+                    {error && <p className="text-red-600 text-sm bg-red-50 p-3 rounded">{error}</p>}
+                    {success && <p className="text-green-600 text-sm bg-green-50 p-3 rounded">{success}</p>}
 
                     <div className="flex gap-4">
                         <div className="w-32 flex items-center border border-gray-300 rounded-md">
                             <button
-                                onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                                className="px-3 py-2 text-gray-600 hover:text-black w-10"
+                                onClick={() => setQuantity(Math.max(MIN_VARIANT_QUANTITY, quantity - 1))}
+                                className="px-3 py-2 text-gray-600 hover:text-black w-10 disabled:opacity-30"
+                                disabled={quantity <= MIN_VARIANT_QUANTITY}
                             >-</button>
                             <span className="flex-1 text-center font-medium">{quantity}</span>
                             <button
@@ -147,7 +211,7 @@ export default function ProductDetailClient({ product }: { product: ProductWithD
                     </div>
 
                     <p className="text-xs text-gray-500 text-center">
-                        Minimum order quantity of 20 items applies to total cart.
+                        Minimum quantity of {MIN_VARIANT_QUANTITY} per item.
                     </p>
                 </div>
             </div>

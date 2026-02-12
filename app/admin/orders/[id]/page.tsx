@@ -18,6 +18,17 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
         }
     });
 
+    // Fetch Status History (Audit Logs)
+    const auditLogs = await prisma.auditLog.findMany({
+        where: {
+            entityType: "ORDER",
+            entityId: id
+        },
+        orderBy: { createdAt: 'desc' }
+    });
+
+    const paymentReminderSent = auditLogs.some(log => log.action === 'PAYMENT_REMINDER_SENT');
+
     if (!order) {
         notFound();
     }
@@ -70,6 +81,39 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
                         <div className="flex justify-between items-center pt-4 mt-4 border-t border-gray-100 font-bold text-lg">
                             <span>Subtotal</span>
                             <span>${order.totalAmount.toString()}</span>
+                        </div>
+                    </div>
+
+                    {/* Timeline & History */}
+                    <div className="bg-white rounded shadow p-6">
+                        <h2 className="text-lg font-bold text-gray-900 mb-4 border-b pb-2">Order History</h2>
+                        <div className="space-y-4">
+                            {auditLogs.length === 0 ? (
+                                <p className="text-gray-500 text-sm">No history recorded.</p>
+                            ) : (
+                                <ol className="relative border-l border-gray-200 ml-2">
+                                    {auditLogs.map((log) => (
+                                        <li key={log.id} className="mb-6 ml-4">
+                                            <div className="absolute w-3 h-3 bg-gray-200 rounded-full mt-1.5 -left-1.5 border border-white"></div>
+                                            <time className="mb-1 text-xs font-normal text-gray-400">
+                                                {new Date(log.createdAt).toLocaleString()}
+                                            </time>
+                                            <h3 className="text-sm font-semibold text-gray-900">
+                                                {log.action.replace(/_/g, " ")}
+                                            </h3>
+                                            <p className="mb-1 text-xs font-normal text-gray-500">
+                                                by {log.actorUserId || 'System'}
+                                            </p>
+                                            {/* Show change details if relevant */}
+                                            {log.newValue && (log.newValue as any).status && (
+                                                <div className="text-xs text-gray-600 bg-gray-50 p-2 rounded">
+                                                    Status changed to: <strong>{(log.newValue as any).status}</strong>
+                                                </div>
+                                            )}
+                                        </li>
+                                    ))}
+                                </ol>
+                            )}
                         </div>
                     </div>
 
@@ -127,6 +171,25 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
                             <div>
                                 <div className="text-sm text-gray-500">Email</div>
                                 <div className="font-medium">{order.email || "N/A"}</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Email Status */}
+                    <div className="bg-white rounded shadow p-6">
+                        <h2 className="text-lg font-bold text-gray-900 mb-4 border-b pb-2">Email Status</h2>
+                        <div className="space-y-3">
+                            <div className="flex justify-between items-center">
+                                <span className="text-sm text-gray-500">Order Confirmation</span>
+                                <span className="text-xs font-bold text-green-600 bg-green-100 px-2 py-1 rounded">SENT</span>
+                            </div>
+                            <div className="flex justify-between items-center">
+                                <span className="text-sm text-gray-500">Payment Reminder</span>
+                                {paymentReminderSent ? (
+                                    <span className="text-xs font-bold text-orange-600 bg-orange-100 px-2 py-1 rounded">SENT</span>
+                                ) : (
+                                    <span className="text-xs font-bold text-gray-400 bg-gray-100 px-2 py-1 rounded">NOT SENT</span>
+                                )}
                             </div>
                         </div>
                     </div>

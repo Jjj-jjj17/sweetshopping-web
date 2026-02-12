@@ -17,6 +17,7 @@ const orderSchema = z.object({
     phone: z.string().min(1, "Phone is required"),
     deliveryMethod: z.enum(["SEVEN_ELEVEN", "POST_OFFICE"]),
     // Optional store fields
+    // Optional store fields
     storeId: z.string().optional(),
     storeName: z.string().optional(),
     storeAddress: z.string().optional(),
@@ -25,6 +26,38 @@ const orderSchema = z.object({
     date: z.string().refine((val) => isValidOrderDate(new Date(val)), {
         message: "Invalid date selected (Must be weekend >= 14 days away)",
     }),
+}).superRefine((data, ctx) => {
+    if (data.deliveryMethod === "SEVEN_ELEVEN") {
+        if (!data.storeId || data.storeId.length !== 6 || !/^\d+$/.test(data.storeId)) {
+            ctx.addIssue({
+                code: z.ZodIssueCode.custom,
+                message: "A valid 6-digit Store Code is required for 7-11 pickup.",
+                path: ["storeId"]
+            });
+        }
+        if (!data.storeName) {
+            ctx.addIssue({
+                code: z.ZodIssueCode.custom,
+                message: "Store Name is required.",
+                path: ["storeName"]
+            });
+        }
+        if (!data.storeAddress) {
+            ctx.addIssue({
+                code: z.ZodIssueCode.custom,
+                message: "Store Address is required.",
+                path: ["storeAddress"]
+            });
+        }
+    } else if (data.deliveryMethod === "POST_OFFICE") {
+        if (!data.deliveryDetails || data.deliveryDetails.length < 5) {
+            ctx.addIssue({
+                code: z.ZodIssueCode.custom,
+                message: "A valid full shipping address is required.",
+                path: ["deliveryDetails"]
+            });
+        }
+    }
 });
 
 export async function placeOrder(cartItems: any[], formData: FormData) {

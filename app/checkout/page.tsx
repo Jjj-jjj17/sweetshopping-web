@@ -214,17 +214,48 @@ export default function CheckoutPage() {
 
                         {deliveryMethod === "SEVEN_ELEVEN" ? (
                             <div className="bg-gray-50 p-6 rounded border border-gray-200 space-y-4">
-                                <label className="block text-base font-bold mb-2 text-gray-900">Store Information (Manual Input)</label>
-
-                                <div>
-                                    <label className="block text-sm font-bold mb-1 text-gray-800">Store Name / Store ID (Optional)</label>
-                                    <input
-                                        name="storeName"
-                                        required
-                                        className="w-full border border-gray-300 rounded p-2 bg-white text-gray-900 focus:ring-black focus:border-black"
-                                        placeholder="e.g. Taipei 101 Store (111001)"
-                                    />
+                                <div className="flex justify-between items-center mb-2">
+                                    <label className="block text-base font-bold text-gray-900">Store Information</label>
+                                    <a
+                                        href="https://emap.pcsc.com.tw/"
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="text-xs font-bold text-blue-600 hover:underline flex items-center gap-1"
+                                    >
+                                        Find 7-11 Store Code ↗
+                                    </a>
                                 </div>
+
+                                <div className="grid grid-cols-3 gap-4">
+                                    <div className="col-span-1">
+                                        <label className="block text-sm font-bold mb-1 text-gray-800">Store Code</label>
+                                        <input
+                                            name="storeId"
+                                            required
+                                            pattern="\d{6}"
+                                            maxLength={6}
+                                            className="w-full border border-gray-300 rounded p-2 bg-white text-gray-900 focus:ring-black focus:border-black font-mono"
+                                            placeholder="123456"
+                                            onChange={(e) => {
+                                                // Allow only numbers
+                                                e.target.value = e.target.value.replace(/[^0-9]/g, '');
+                                            }}
+                                        />
+                                    </div>
+                                    <div className="col-span-2">
+                                        <label className="block text-sm font-bold mb-1 text-gray-800">Store Name</label>
+                                        <input
+                                            name="storeName"
+                                            required
+                                            className="w-full border border-gray-300 rounded p-2 bg-white text-gray-900 focus:ring-black focus:border-black"
+                                            placeholder="e.g. Big City Store"
+                                        />
+                                    </div>
+                                </div>
+                                <div className="text-xs text-gray-500">
+                                    Please enter the 6-digit store code for accurate delivery.
+                                </div>
+
                                 <div>
                                     <label className="block text-sm font-bold mb-1 text-gray-800">Store Address (Full)</label>
                                     <input
