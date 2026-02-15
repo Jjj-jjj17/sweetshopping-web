@@ -1,14 +1,13 @@
 import { Resend } from 'resend';
 import { Order } from '@/types';
+import { env } from '@/env';
 
-// Initialize Resend with API Key from Environment Variable
-// If key is missing, we log to console (Dev Mode)
-const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
+// Initialize Resend with API Key from Validated Environment
+const resend = env.RESEND_API_KEY ? new Resend(env.RESEND_API_KEY) : null;
 
 export async function sendOrderConfirmation(order: Order) {
     if (!resend) {
         console.log("RESEND_API_KEY not found. Skipping email sending.");
-        console.log("Would send email to:", order.customerEmail);
         return { success: false, error: 'No API Key' };
     }
 

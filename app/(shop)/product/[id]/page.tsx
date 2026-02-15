@@ -3,14 +3,15 @@ import { supabase } from '@/lib/supabase';
 import ProductDetailView from './ProductDetailView';
 
 type Props = {
-    params: { id: string }
-    searchParams: { [key: string]: string | string[] | undefined }
+    params: Promise<{ id: string }>
+    searchParams: Promise<{ [key: string]: string | string[] | undefined }>
 }
 
 export async function generateMetadata(
-    { params }: Props,
+    props: Props,
     parent: ResolvingMetadata
 ): Promise<Metadata> {
+    const params = await props.params;
     const id = params.id
 
     const { data: product } = await supabase.from('products').select('*').eq('id', id).single();
@@ -28,6 +29,7 @@ export async function generateMetadata(
     }
 }
 
-export default function Page({ params }: Props) {
+export default async function Page(props: Props) {
+    const params = await props.params;
     return <ProductDetailView id={params.id} />;
 }

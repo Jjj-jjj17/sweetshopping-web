@@ -1,18 +1,10 @@
 import { createClient } from '@supabase/supabase-js';
+import { env } from '@/env';
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-
-if (!supabaseUrl || !supabaseAnonKey) {
-    // Can't throw in module scope without breaking build if vars are missing during CI/CD
-    // but we warn for DX.
-    console.warn("Missing Supabase Environment Variables");
-}
-
+// Next.js 16/19 Secure Multi-Auth Supabase Client
 export const supabase = createClient(
-    supabaseUrl || 'https://placeholder.supabase.co',
-    supabaseAnonKey || 'placeholder'
+    env.NEXT_PUBLIC_SUPABASE_URL,
+    env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 );
 
-// Helper for TypeScript
 export type SupabaseClient = typeof supabase;
