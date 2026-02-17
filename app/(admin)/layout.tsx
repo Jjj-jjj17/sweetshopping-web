@@ -27,11 +27,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 }
             } else {
                 setIsAuthenticated(false);
-                // If logged in but not admin, maybe sign them out or just redirect?
-                // For now, treat as unauthenticated for admin routes.
-                if (pathname !== '/admin/login') {
-                    router.push('/admin/login');
-                }
+                router.push('/admin/login');
             }
             setLoading(false);
         };
@@ -47,9 +43,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 }
             } else {
                 setIsAuthenticated(false);
-                if (pathname !== '/admin/login') {
-                    router.push('/admin/login');
-                }
+                router.push('/admin/login');
             }
         });
 
@@ -63,12 +57,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     }
 
     if (!isAuthenticated) {
-        // If not authenticated and on the login page, render children (which should be LoginScreen)
-        if (pathname === '/admin/login') {
-            return <>{children}</>;
-        }
-        // Otherwise, the useEffect should have redirected to /admin/login
-        return null; // Or a simple loading/redirect message
+        return null; // The useEffect will handle redirect
     }
 
     const isActive = (path: string) => pathname === path;

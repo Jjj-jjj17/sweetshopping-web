@@ -8,7 +8,7 @@ export function Footer() {
                 <div className="mt-4 flex justify-center gap-4">
                     <Link href="/privacy" className="hover:underline">Privacy Policy</Link>
                     <Link href="/terms" className="hover:underline">Terms of Service</Link>
-                    <Link href="/admin" className="hover:underline opacity-50 hover:opacity-100 transition-opacity">Staff Login</Link>
+                    <Link href="/admin/login" className="hover:underline opacity-50 hover:opacity-100 transition-opacity">Staff Login</Link>
                 </div>
             </div>
         </footer>
