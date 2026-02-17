@@ -1,10 +1,18 @@
-import { createClient } from '@supabase/supabase-js';
+import { createClient as createSupabaseClient } from '@supabase/supabase-js';
 import { env } from '@/env';
 
-// Next.js 16/19 Secure Multi-Auth Supabase Client
-export const supabase = createClient(
+// Next.js 16/19 Secure Multi-Auth Supabase Client (Client-side)
+export const supabase = createSupabaseClient(
     env.NEXT_PUBLIC_SUPABASE_URL,
     env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 );
+
+// Export createClient function for server-side usage
+export function createClient() {
+    return createSupabaseClient(
+        env.NEXT_PUBLIC_SUPABASE_URL,
+        env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+    );
+}
 
 export type SupabaseClient = typeof supabase;
