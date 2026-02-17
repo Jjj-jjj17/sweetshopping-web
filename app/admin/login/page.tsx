@@ -6,50 +6,62 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Loader2, Lock } from 'lucide-react';
-import { useOrders } from '@/context/OrderContext';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 
 function LoginContent() {
     const router = useRouter();
     const searchParams = useSearchParams();
-    const { initialize } = useOrders(); // We might repurpose this or remove it
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
-    // Display error from OAuth callback if present
+    // Display safe error messages from OAuth callback
     useEffect(() => {
         const errorParam = searchParams.get('error');
         if (errorParam) {
             const errorMessages: Record<string, string> = {
                 'auth_failed': 'Authentication failed. Please try again.',
-                'unauthorized': 'Your email is not authorized for admin access.',
-                'unexpected': 'An unexpected error occurred. Please try again.',
-                'no_code': 'Authentication code missing. Please try again.',
+                'unauthorized': 'Access denied. Your email is not authorized.',
+                'no_code': 'Authentication error. Please try again.',
             };
-            setError(errorMessages[errorParam] || 'An error occurred during login.');
+            setError(errorMessages[errorParam] || 'An error occurred. Please try again.');
         }
     }, [searchParams]);
 
-    const handleLogin = async (e: React.FormEvent) => {
+    const handleEmailPasswordLogin = async (e: React.FormEvent) => {
         e.preventDefault();
         setLoading(true);
         setError(null);
 
         try {
-            const { data, error } = await supabase.auth.signInWithPassword({
+            const { data, error: authError } = await supabase.auth.signInWithPassword({
                 email,
                 password
             });
 
-            if (error) throw error;
+            if (authError || !data.user) {
+                setError('Invalid email or password.');
+                setLoading(false);
+                return;
+            }
+
+            // Check if user email is in admin whitelist
+            const adminEmails = (process.env.NEXT_PUBLIC_ADMIN_EMAIL ?? '')
+                .split(',')
+                .map(e => e.trim().toLowerCase());
+
+            if (!adminEmails.includes(data.user.email?.toLowerCase() ?? '')) {
+                await supabase.auth.signOut();
+                setError('Access denied. Your email is not authorized.');
+                setLoading(false);
+                return;
+            }
 
             router.push('/admin/dashboard');
             router.refresh();
-        } catch (err: any) {
-            setError(err.message || 'Login failed');
-        } finally {
+        } catch {
+            setError('Login failed. Please try again.');
             setLoading(false);
         }
     };
@@ -57,20 +69,24 @@ function LoginContent() {
     const handleGoogleLogin = async () => {
         setLoading(true);
         setError(null);
+
         try {
-            const { error } = await supabase.auth.signInWithOAuth({
+            const { error: authError } = await supabase.auth.signInWithOAuth({
                 provider: 'google',
                 options: {
                     redirectTo: `${typeof window !== 'undefined' ? window.location.origin : ''}/auth/callback`,
                 },
             });
-            if (error) throw error;
-        } catch (err: any) {
-            setError(err.message || 'Google Login failed');
+
+            if (authError) {
+                setError('Google sign-in failed. Please try again.');
+                setLoading(false);
+            }
+        } catch {
+            setError('Google sign-in failed. Please try again.');
             setLoading(false);
         }
     };
-
 
     return (
         <div className="min-h-screen flex items-center justify-center bg-secondary/20 p-4">
@@ -90,7 +106,6 @@ function LoginContent() {
                         onClick={handleGoogleLogin}
                         disabled={loading}
                     >
-                        {/* Simple G icon or similar */}
                         <svg className="mr-2 h-4 w-4" aria-hidden="true" focusable="false" data-prefix="fab" data-icon="google" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 488 512"><path fill="currentColor" d="M488 261.8C488 403.3 391.1 504 248 504 110.8 504 0 393.2 0 256S110.8 8 248 8c66.8 0 123 24.5 166.3 64.9l-67.5 64.9C258.5 52.6 94.3 116.6 94.3 256c0 86.5 69.1 156.6 153.7 156.6 98.2 0 135-70.4 140.8-106.9H248v-85.3h236.1c2.3 12.7 3.9 24.9 3.9 41.4z"></path></svg>
                         Sign in with Google
                     </Button>
@@ -104,7 +119,7 @@ function LoginContent() {
                         </div>
                     </div>
 
-                    <form onSubmit={handleLogin} className="space-y-4">
+                    <form onSubmit={handleEmailPasswordLogin} className="space-y-4">
                         <div className="space-y-2">
                             <Input
                                 type="email"
@@ -113,6 +128,7 @@ function LoginContent() {
                                 onChange={(e) => setEmail(e.target.value)}
                                 required
                                 className="h-11"
+                                disabled={loading}
                             />
                         </div>
                         <div className="space-y-2">
@@ -123,6 +139,7 @@ function LoginContent() {
                                 onChange={(e) => setPassword(e.target.value)}
                                 required
                                 className="h-11"
+                                disabled={loading}
                             />
                         </div>
 

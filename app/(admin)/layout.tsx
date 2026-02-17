@@ -2,47 +2,49 @@
 
 import React, { useEffect, useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
-import { supabase } from '@/lib/supabase'; // Assuming you have this path for supabase client
-import { useOrders } from '@/context/OrderContext'; // Keep this if logout is still handled by it, or remove if logout is also moved to supabase
+import { supabase } from '@/lib/supabase';
 import { Button } from '@/components/ui/button';
-import { LayoutDashboard, Package, LogOut, Home, Loader2 } from 'lucide-react'; // Added Loader2
+import { LayoutDashboard, Package, LogOut, Home, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
-    const { logout } = useOrders(); // Keep this if logout is still handled by useOrders
     const pathname = usePathname();
     const router = useRouter();
     const [loading, setLoading] = useState(true);
-    const [isAuthenticated, setIsAuthenticated] = useState(false); // New state for authentication status
+    const [isAuthenticated, setIsAuthenticated] = useState(false);
 
     useEffect(() => {
         const checkAuth = async () => {
             const { data: { session } } = await supabase.auth.getSession();
-            const adminEmails = (process.env.NEXT_PUBLIC_ADMIN_EMAIL || '').split(',').map(e => e.trim().toLowerCase());
+            const adminEmails = (process.env.NEXT_PUBLIC_ADMIN_EMAIL || '')
+                .split(',')
+                .map(e => e.trim().toLowerCase());
 
-            if (session?.user?.email && adminEmails.includes(session.user.email.toLowerCase())) {
-                setIsAuthenticated(true);
-                if (pathname === '/admin/login') {
-                    router.push('/admin/dashboard');
-                }
-            } else {
-                setIsAuthenticated(false);
+            const isAdmin = session?.user?.email &&
+                adminEmails.includes(session.user.email.toLowerCase());
+
+            setIsAuthenticated(!!isAdmin);
+            setLoading(false);
+
+            // Only redirect if not authenticated AND not already on login page
+            if (!isAdmin && pathname !== '/admin/login') {
                 router.push('/admin/login');
             }
-            setLoading(false);
         };
 
-        // Subscribe to Auth Changes
+        // Subscribe to auth changes
         const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-            const adminEmails = (process.env.NEXT_PUBLIC_ADMIN_EMAIL || '').split(',').map(e => e.trim().toLowerCase());
+            const adminEmails = (process.env.NEXT_PUBLIC_ADMIN_EMAIL || '')
+                .split(',')
+                .map(e => e.trim().toLowerCase());
 
-            if (session?.user?.email && adminEmails.includes(session.user.email.toLowerCase())) {
-                setIsAuthenticated(true);
-                if (pathname === '/admin/login') {
-                    router.push('/admin/dashboard');
-                }
-            } else {
-                setIsAuthenticated(false);
+            const isAdmin = session?.user?.email &&
+                adminEmails.includes(session.user.email.toLowerCase());
+
+            setIsAuthenticated(!!isAdmin);
+
+            // Redirect if session becomes invalid
+            if (!isAdmin && pathname !== '/admin/login') {
                 router.push('/admin/login');
             }
         });
@@ -52,12 +54,22 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         return () => subscription.unsubscribe();
     }, [pathname, router]);
 
+    const handleLogout = async () => {
+        await supabase.auth.signOut();
+        router.push('/admin/login');
+        router.refresh();
+    };
+
     if (loading) {
-        return <div className="h-screen flex items-center justify-center"><Loader2 className="animate-spin h-8 w-8 text-primary" /></div>;
+        return (
+            <div className="h-screen flex items-center justify-center">
+                <Loader2 className="animate-spin h-8 w-8 text-primary" />
+            </div>
+        );
     }
 
     if (!isAuthenticated) {
-        return null; // The useEffect will handle redirect
+        return null; // useEffect will handle redirect
     }
 
     const isActive = (path: string) => pathname === path;
@@ -93,7 +105,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                             <Home className="h-4 w-4" />
                         </Button>
                     </Link>
-                    <Button variant="ghost" size="icon" onClick={logout} className="text-muted-foreground">
+                    <Button variant="ghost" size="icon" onClick={handleLogout} className="text-muted-foreground">
                         <LogOut className="h-4 w-4" />
                     </Button>
                 </div>
