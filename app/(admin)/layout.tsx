@@ -18,9 +18,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     useEffect(() => {
         const checkAuth = async () => {
             const { data: { session } } = await supabase.auth.getSession();
-            const adminEmails = (process.env.NEXT_PUBLIC_ADMIN_EMAIL || '').split(',').map(e => e.trim());
+            const adminEmails = (process.env.NEXT_PUBLIC_ADMIN_EMAIL || '').split(',').map(e => e.trim().toLowerCase());
 
-            if (session?.user?.email && adminEmails.includes(session.user.email)) {
+            if (session?.user?.email && adminEmails.includes(session.user.email.toLowerCase())) {
                 setIsAuthenticated(true);
                 if (pathname === '/admin/login') {
                     router.push('/admin/dashboard');
@@ -34,9 +34,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
         // Subscribe to Auth Changes
         const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-            const adminEmails = (process.env.NEXT_PUBLIC_ADMIN_EMAIL || '').split(',').map(e => e.trim());
+            const adminEmails = (process.env.NEXT_PUBLIC_ADMIN_EMAIL || '').split(',').map(e => e.trim().toLowerCase());
 
-            if (session?.user?.email && adminEmails.includes(session.user.email)) {
+            if (session?.user?.email && adminEmails.includes(session.user.email.toLowerCase())) {
                 setIsAuthenticated(true);
                 if (pathname === '/admin/login') {
                     router.push('/admin/dashboard');

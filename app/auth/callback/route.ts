@@ -12,6 +12,7 @@ export async function GET(request: Request) {
     }
 
     const cookieStore = await cookies()
+    const response = NextResponse.redirect(`${origin}/admin/dashboard`)
 
     const supabase = createServerClient(
         process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -23,7 +24,7 @@ export async function GET(request: Request) {
                 },
                 setAll(cookiesToSet: { name: string; value: string; options?: Record<string, unknown> }[]) {
                     cookiesToSet.forEach(({ name, value, options }) =>
-                        cookieStore.set(name, value, options)
+                        response.cookies.set(name, value, options as any)
                     )
                 },
             },
@@ -46,5 +47,5 @@ export async function GET(request: Request) {
         return NextResponse.redirect(`${origin}/admin/login?error=unauthorized`)
     }
 
-    return NextResponse.redirect(`${origin}/admin/dashboard`)
+    return response
 }
