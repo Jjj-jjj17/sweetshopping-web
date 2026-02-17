@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import { supabase } from '@/lib/supabase';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -9,7 +9,7 @@ import { Loader2, Lock } from 'lucide-react';
 import { useOrders } from '@/context/OrderContext';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 
-export default function AdminLogin() {
+function LoginContent() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const { initialize } = useOrders(); // We might repurpose this or remove it
@@ -61,7 +61,7 @@ export default function AdminLogin() {
             const { error } = await supabase.auth.signInWithOAuth({
                 provider: 'google',
                 options: {
-                    redirectTo: `${window.location.origin}/auth/callback`,
+                    redirectTo: `${typeof window !== 'undefined' ? window.location.origin : ''}/auth/callback`,
                 },
             });
             if (error) throw error;
@@ -135,5 +135,13 @@ export default function AdminLogin() {
                 </CardContent>
             </Card>
         </div>
+    );
+}
+
+export default function AdminLogin() {
+    return (
+        <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><Loader2 className="animate-spin h-8 w-8 text-primary" /></div>}>
+            <LoginContent />
+        </Suspense>
     );
 }
