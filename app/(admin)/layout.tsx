@@ -23,6 +23,13 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             const isAdmin = session?.user?.email &&
                 adminEmails.includes(session.user.email.toLowerCase());
 
+            console.log('=== ADMIN LAYOUT DEBUG ===')
+            console.log('Session:', !!session)
+            console.log('Email:', session?.user?.email)
+            console.log('Admin emails:', adminEmails)
+            console.log('Is admin:', isAdmin)
+            console.log('Pathname:', pathname)
+
             setIsAuthenticated(!!isAdmin);
             setLoading(false);
 

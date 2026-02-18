@@ -8,19 +8,31 @@ export default function AuthCallback() {
 
     useEffect(() => {
         supabase.auth.onAuthStateChange(async (event, session) => {
+            console.log('=== AUTH CALLBACK DEBUG ===')
+            console.log('Event:', event)
+            console.log('Session user:', session?.user?.email)
+            console.log('Has session:', !!session)
+
             if (event === 'SIGNED_IN' && session?.user) {
                 const email = session.user.email ?? ''
                 const adminEmails = (process.env.NEXT_PUBLIC_ADMIN_EMAIL ?? '')
                     .split(',')
                     .map(e => e.trim().toLowerCase())
 
+                console.log('Email:', email)
+                console.log('Admin emails:', adminEmails)
+                console.log('Is admin:', adminEmails.includes(email.toLowerCase()))
+
                 if (adminEmails.includes(email.toLowerCase())) {
+                    console.log('Redirecting to /admin/dashboard')
                     router.push('/admin/dashboard')
                 } else {
+                    console.log('Unauthorized - signing out')
                     await supabase.auth.signOut()
                     router.push('/admin/login?error=unauthorized')
                 }
             } else if (event === 'SIGNED_OUT') {
+                console.log('Signed out - redirecting to login')
                 router.push('/admin/login')
             }
         })
