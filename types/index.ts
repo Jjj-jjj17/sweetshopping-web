@@ -14,13 +14,14 @@ export interface AuditLog {
 export interface Product {
     id: string; // UUID
     name: string;
-    description?: string;
+    description: string;
     price: number;
-    image_url?: string;
-    stock_status: StockStatus;
-    category?: string; // New: 'Cake', 'Cookie', 'Bread' etc.
-    is_active: boolean;
+    category: string;
+    images: string[];
+    stock: number;
+    is_available: boolean;
     created_at: string; // ISO String
+    updated_at: string; // ISO String
 }
 
 export interface OrderItem {
