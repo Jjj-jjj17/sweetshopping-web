@@ -10,6 +10,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { CheckCircle, Loader2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { toast } from 'sonner';
 
 export default function CheckoutPage() {
     const { items, total, clearCart } = useCart();
@@ -89,7 +90,8 @@ export default function CheckoutPage() {
             }
 
             // Insert Order
-            const { data: orderData, error: orderError } = await supabase
+            console.log("Submitting order payload...");
+            const insertResponse = await supabase
                 .from('orders')
                 .insert({
                     customer_name: formData.name,
@@ -104,27 +106,45 @@ export default function CheckoutPage() {
                 .select('id')
                 .single();
 
-            if (orderError) throw orderError;
+            console.log("Supabase insert response:", insertResponse);
 
-            if (orderData) {
-                // Decrement stock for all items
-                // Note: In a production App, RPC is safer here to prevent race conditions
-                for (const cartItem of items) {
-                    const dbProduct = stockData?.find((p: { id: string, name: string, stock: number, is_available: boolean }) => p.id === cartItem.productId);
-                    if (dbProduct) {
-                        await supabase.from('products').update({
-                            stock: dbProduct.stock - cartItem.quantity
-                        }).eq('id', cartItem.productId);
-                    }
-                }
+            const { data: orderData, error: orderError } = insertResponse;
 
-                clearCart();
-                router.push(`/order-confirmation/${orderData.id}`);
+            if (orderError) {
+                console.error("Supabase Order Insert Error:", orderError);
+                throw orderError;
             }
 
+            if (!orderData || !orderData.id) {
+                const missingIdError = new Error("No order ID returned from database. (May be caused by missing SELECT RLS policy on orders)");
+                console.error(missingIdError);
+                throw missingIdError;
+            }
+
+            console.log('Created order ID:', orderData.id);
+
+            // Decrement stock for all items
+            // Note: In a production App, RPC is safer here to prevent race conditions
+            for (const cartItem of items) {
+                const dbProduct = stockData?.find((p: { id: string, name: string, stock: number, is_available: boolean }) => p.id === cartItem.productId);
+                if (dbProduct) {
+                    await supabase.from('products').update({
+                        stock: dbProduct.stock - cartItem.quantity
+                    }).eq('id', cartItem.productId);
+                }
+            }
+
+            clearCart();
+            toast.success("Order placed successfully!");
+
+            // Short delay to allow toast to render and Supabase real-time index to catch up (if applicable)
+            setTimeout(() => {
+                router.push(`/order-confirmation/${orderData.id}`);
+            }, 800);
+
         } catch (err: any) {
-            console.error(err);
-            alert("Order failed: " + err.message);
+            console.error("Full Error Object:", err);
+            toast.error(err.message || "Order failed to submit. Please contact support.");
             setIsSubmitting(false);
         }
     };
