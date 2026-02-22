@@ -93,7 +93,7 @@ export const addItemToCartLogic = (currentCart: CartItem[], product: Product, qu
         name: product.name,
         quantity,
         price: product.price,
-        maxStock: product.stock_status === 'IN_STOCK' ? 99 : 0,
+        maxStock: product.stock > 0 ? product.stock : 0,
         notes: ''
     }];
 };

@@ -6,19 +6,27 @@ import { Product } from '@/types';
 const mockProduct: Product = {
     id: 'p1',
     name: 'Test Cake',
+    description: 'A test cake',
+    category: 'Cake',
     price: 100,
-    stock_status: 'IN_STOCK',
-    is_active: true,
-    created_at: '2023-01-01'
+    stock: 50,
+    is_available: true,
+    images: [],
+    created_at: '2023-01-01',
+    updated_at: '2023-01-01'
 };
 
 const mockProduct2: Product = {
     id: 'p2',
     name: 'Cookie',
+    description: 'A test cookie',
+    category: 'Cookie',
     price: 50,
-    stock_status: 'IN_STOCK',
-    is_active: true,
-    created_at: '2023-01-01'
+    stock: 50,
+    is_available: true,
+    images: [],
+    created_at: '2023-01-01',
+    updated_at: '2023-01-01'
 };
 
 describe('Pricing Logic (Cart)', () => {

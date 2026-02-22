@@ -27,12 +27,14 @@ export const AuditLogSchema: z.ZodType<AuditLog> = z.object({
 export const ProductSchema: z.ZodType<Product> = z.object({
     id: z.string().uuid(),
     name: z.string().min(1, "Name is required"),
-    description: z.string().optional(),
+    description: z.string().default(''),
     price: z.number().min(0),
-    image_url: z.string().optional(),
-    stock_status: StockStatusSchema,
-    is_active: z.boolean(),
+    category: z.string().default('Uncategorized'),
+    images: z.array(z.string()).default([]),
+    stock: z.number().int().min(0).default(0),
+    is_available: z.boolean().default(true),
     created_at: z.string(),
+    updated_at: z.string(),
 });
 
 export const OrderItemSchema: z.ZodType<OrderItem> = z.object({
