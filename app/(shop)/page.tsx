@@ -9,7 +9,9 @@ import { Search, Loader2 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { useSearchParams, useRouter } from 'next/navigation';
 
-export default function ShopHome() {
+import { Suspense } from 'react';
+
+function ShopHomeContent() {
     const searchParams = useSearchParams();
     const router = useRouter();
 
@@ -105,8 +107,8 @@ export default function ShopHome() {
                                     key={cat}
                                     onClick={() => handleCategoryClick(cat)}
                                     className={`text-left px-3 py-2 rounded-md text-sm font-medium transition-colors ${urlCategory === cat
-                                            ? 'bg-primary text-primary-foreground'
-                                            : 'hover:bg-secondary text-muted-foreground hover:text-foreground'
+                                        ? 'bg-primary text-primary-foreground'
+                                        : 'hover:bg-secondary text-muted-foreground hover:text-foreground'
                                         }`}
                                 >
                                     {cat}
@@ -149,5 +151,13 @@ export default function ShopHome() {
                 </div>
             </div>
         </div>
+    );
+}
+
+export default function ShopHome() {
+    return (
+        <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><Loader2 className="h-10 w-10 animate-spin text-primary" /></div>}>
+            <ShopHomeContent />
+        </Suspense>
     );
 }
