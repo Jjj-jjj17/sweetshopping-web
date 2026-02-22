@@ -54,8 +54,10 @@ export default function CheckoutPage() {
         } catch (err: any) {
             if (err instanceof z.ZodError) {
                 const fieldErrors: Record<string, string> = {};
-                err.errors.forEach((e: any) => {
-                    if (e.path[0]) fieldErrors[e.path[0] as string] = e.message;
+                err.issues.forEach((issue) => {
+                    if (issue.path[0]) {
+                        fieldErrors[issue.path[0] as string] = issue.message;
+                    }
                 });
                 setErrors(fieldErrors);
                 setIsSubmitting(false);
@@ -75,7 +77,7 @@ export default function CheckoutPage() {
 
             // Validate all items
             for (const cartItem of items) {
-                const dbProduct = stockData?.find(p => p.id === cartItem.productId);
+                const dbProduct = stockData?.find((p: { id: string, name: string, stock: number, is_available: boolean }) => p.id === cartItem.productId);
 
                 if (!dbProduct || !dbProduct.is_available) {
                     throw new Error(`Item ${cartItem.name} is no longer available.`);
@@ -108,7 +110,7 @@ export default function CheckoutPage() {
                 // Decrement stock for all items
                 // Note: In a production App, RPC is safer here to prevent race conditions
                 for (const cartItem of items) {
-                    const dbProduct = stockData?.find(p => p.id === cartItem.productId);
+                    const dbProduct = stockData?.find((p: { id: string, name: string, stock: number, is_available: boolean }) => p.id === cartItem.productId);
                     if (dbProduct) {
                         await supabase.from('products').update({
                             stock: dbProduct.stock - cartItem.quantity
@@ -180,7 +182,7 @@ export default function CheckoutPage() {
                                     placeholder="Full Delivery Address"
                                     rows={3}
                                     value={formData.address}
-                                    onChange={e => setFormData({ ...formData, address: e.target.value })}
+                                    onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setFormData({ ...formData, address: e.target.value })}
                                 />
                                 {errors.address && <p className="text-red-500 text-xs mt-1">{errors.address}</p>}
                             </div>
@@ -190,7 +192,7 @@ export default function CheckoutPage() {
                                     placeholder="Special Instructions (Optional)"
                                     rows={2}
                                     value={formData.instructions}
-                                    onChange={e => setFormData({ ...formData, instructions: e.target.value })}
+                                    onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setFormData({ ...formData, instructions: e.target.value })}
                                 />
                             </div>
                         </CardContent>
