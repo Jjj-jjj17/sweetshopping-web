@@ -23,24 +23,23 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             const isAdmin = session?.user?.email &&
                 adminEmails.includes(session.user.email.toLowerCase());
 
-            console.log('=== ADMIN LAYOUT DEBUG ===')
-            console.log('Session:', !!session)
-            console.log('Email:', session?.user?.email)
-            console.log('Admin emails:', adminEmails)
-            console.log('Is admin:', isAdmin)
-            console.log('Pathname:', pathname)
-
             setIsAuthenticated(!!isAdmin);
             setLoading(false);
 
-            // Only redirect if not authenticated AND not already on login page
+            // Give OAuth redirect a moment to settle if the localStorage flag is present
             if (!isAdmin && pathname !== '/admin/login') {
-                router.push('/admin/login');
+                if (localStorage.getItem('admin_logged_in') !== 'true') {
+                    router.push('/admin/login');
+                }
             }
         };
 
         // Subscribe to auth changes
-        const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+        const { data: { subscription } } = supabase.auth.onAuthStateChange((event: string, session: any) => {
+            if (event === 'SIGNED_OUT') {
+                localStorage.removeItem('admin_logged_in');
+            }
+
             const adminEmails = (process.env.NEXT_PUBLIC_ADMIN_EMAIL || '')
                 .split(',')
                 .map(e => e.trim().toLowerCase());
@@ -50,9 +49,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
             setIsAuthenticated(!!isAdmin);
 
-            // Redirect if session becomes invalid
             if (!isAdmin && pathname !== '/admin/login') {
-                router.push('/admin/login');
+                if (localStorage.getItem('admin_logged_in') !== 'true') {
+                    router.push('/admin/login');
+                }
             }
         });
 
@@ -62,6 +62,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     }, [pathname, router]);
 
     const handleLogout = async () => {
+        localStorage.removeItem('admin_logged_in');
         await supabase.auth.signOut();
         router.push('/admin/login');
         router.refresh();

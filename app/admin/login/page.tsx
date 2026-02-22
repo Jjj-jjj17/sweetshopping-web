@@ -58,6 +58,7 @@ function LoginContent() {
                 return;
             }
 
+            localStorage.setItem('admin_logged_in', 'true');
             router.push('/admin/dashboard');
             router.refresh();
         } catch {

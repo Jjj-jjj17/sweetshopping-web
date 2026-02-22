@@ -7,7 +7,7 @@ export default function AuthCallback() {
     const router = useRouter()
 
     useEffect(() => {
-        supabase.auth.onAuthStateChange(async (event, session) => {
+        supabase.auth.onAuthStateChange(async (event: string, session: any) => {
             console.log('=== AUTH CALLBACK DEBUG ===')
             console.log('Event:', event)
             console.log('Session user:', session?.user?.email)
@@ -25,6 +25,9 @@ export default function AuthCallback() {
 
                 if (adminEmails.includes(email.toLowerCase())) {
                     console.log('Redirecting to /admin/dashboard')
+                    localStorage.setItem('admin_logged_in', 'true')
+                    // Add a small delay to ensure session is persisted across React boundaries
+                    await new Promise(resolve => setTimeout(resolve, 500))
                     router.push('/admin/dashboard')
                 } else {
                     console.log('Unauthorized - signing out')

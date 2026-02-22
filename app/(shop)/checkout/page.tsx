@@ -177,15 +177,19 @@ export default function CheckoutPage() {
                             <CardTitle>Delivery Information</CardTitle>
                         </CardHeader>
                         <CardContent className="space-y-4">
-                            <div>
-                                <Textarea
-                                    placeholder="Full Delivery Address"
-                                    rows={3}
-                                    value={formData.address}
-                                    onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setFormData({ ...formData, address: e.target.value })}
-                                />
-                                {errors.address && <p className="text-red-500 text-xs mt-1">{errors.address}</p>}
-                            </div>
+                            <label className="text-sm font-medium mb-1 block">7-ELEVEN 取貨門市地址</label>
+                            <Textarea
+                                name="address"
+                                placeholder="請輸入您附近的7-ELEVEN門市完整地址（例如：彰化縣彰化市中山路二段100號）"
+                                required
+                                rows={3}
+                                value={formData.address}
+                                onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setFormData({ ...formData, address: e.target.value })}
+                            />
+                            <p className="text-sm text-gray-500 mt-1">
+                                訂單將配送至您指定的7-ELEVEN門市，請確保地址完整正確
+                            </p>
+                            {errors.address && <p className="text-red-500 text-xs mt-1">{errors.address}</p>}
 
                             <div>
                                 <Textarea
