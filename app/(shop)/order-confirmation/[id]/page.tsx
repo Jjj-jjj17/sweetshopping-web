@@ -5,13 +5,14 @@ import { Button } from '@/components/ui/button';
 export default async function OrderConfirmationPage({
     params
 }: {
-    params: { id: string }
+    params: Promise<{ id: string }>
 }) {
+    const { id } = await params;
+
     console.log('=== ORDER CONFIRMATION PAGE ===')
-    console.log('Raw params:', params)
-    console.log('Order ID to fetch:', params.id)
-    console.log('ID type:', typeof params.id)
-    console.log('ID length:', params.id?.length)
+    console.log('Order ID to fetch:', id)
+    console.log('ID type:', typeof id)
+    console.log('ID length:', id?.length)
 
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
     const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
@@ -26,7 +27,7 @@ export default async function OrderConfirmationPage({
     const { data: order, error, status, statusText } = await supabase
         .from('orders')
         .select('*')
-        .eq('id', params.id)
+        .eq('id', id)
         .single()
 
     console.log('Fetch completed')
@@ -50,7 +51,7 @@ export default async function OrderConfirmationPage({
                         Order Fetch Failed (Debug Mode)
                     </h1>
                     <div className="space-y-2 text-sm text-foreground">
-                        <p><strong>Order ID:</strong> {params.id}</p>
+                        <p><strong>Order ID:</strong> {id}</p>
                         <p><strong>Status:</strong> {status}</p>
                         <p><strong>Error Code:</strong> {error.code}</p>
                         <p><strong>Error Message:</strong> {error.message}</p>
@@ -58,7 +59,7 @@ export default async function OrderConfirmationPage({
                         <p><strong>Hint:</strong> {error.hint}</p>
                     </div>
                     <pre className="mt-4 p-4 bg-gray-900 text-green-400 rounded text-xs overflow-auto">
-                        {JSON.stringify({ error, params, status }, null, 2)}
+                        {JSON.stringify({ error, id, status }, null, 2)}
                     </pre>
                     <div className="mt-6">
                         <Link href="/"><Button variant="outline">Back to Shop</Button></Link>
@@ -76,7 +77,7 @@ export default async function OrderConfirmationPage({
                     <h1 className="text-2xl font-bold text-red-600">
                         Order Not Found (Null Data)
                     </h1>
-                    <p className="mt-4 text-foreground">Order ID: {params.id}</p>
+                    <p className="mt-4 text-foreground">Order ID: {id}</p>
                     <div className="mt-6">
                         <Link href="/"><Button variant="outline">Back to Shop</Button></Link>
                     </div>
