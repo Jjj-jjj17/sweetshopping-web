@@ -1,43 +1,35 @@
 "use client";
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { supabase } from '@/lib/supabase';
 import { Product } from '@/types';
-import { useCart } from '@/context/CartContext';
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { ProductGrid } from '@/components/shop/ProductGrid';
 import { Button } from '@/components/ui/button';
-import { ShoppingCart, Loader2, Search } from 'lucide-react';
-import Image from 'next/image';
-import Link from 'next/link';
+import { Search, Loader2 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
-import { ProductSkeleton } from '@/components/ProductSkeleton';
+import { useSearchParams, useRouter } from 'next/navigation';
 
-// Placeholder for now
 export default function ShopHome() {
+    const searchParams = useSearchParams();
+    const router = useRouter();
+
+    const urlCategory = searchParams.get('category') || 'All';
+
     const [products, setProducts] = useState<Product[]>([]);
-    const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
     const [loading, setLoading] = useState(true);
-    const { addToCart, count } = useCart();
-
-    // Search & Filter State
     const [searchTerm, setSearchTerm] = useState('');
-    const [selectedCategory, setSelectedCategory] = useState<string>('All');
-
-    // Hardcoded categories for now, effectively acts as "Tags" if db doesn't have strict relations
-    const CATEGORIES = ['All', 'Cake', 'Cookie', 'Bread', 'Gift Box'];
 
     useEffect(() => {
         async function fetchProducts() {
-            // In a real scenario, fetch from Supabase. 
-            // For now, if no env vars, we might show empty or mock.
+            setLoading(true);
             const { data, error } = await supabase
                 .from('products')
                 .select('*')
-                .eq('is_active', true);
+                .eq('is_available', true)
+                .order('created_at', { ascending: false });
 
-            if (data) {
+            if (data && !error) {
                 setProducts(data as Product[]);
-                setFilteredProducts(data as Product[]);
             }
             setLoading(false);
         }
@@ -45,134 +37,117 @@ export default function ShopHome() {
         fetchProducts();
     }, []);
 
-    // Filter Logic
-    useEffect(() => {
+    // Extract categories
+    const categories = useMemo(() => {
+        const cats = new Set(products.map(p => p.category).filter(Boolean));
+        return ['All', ...Array.from(cats)];
+    }, [products]);
+
+    // Apply Filters
+    const filteredProducts = useMemo(() => {
         let result = products;
 
-        if (selectedCategory !== 'All') {
-            result = result.filter(p => p.category === selectedCategory);
+        if (urlCategory !== 'All') {
+            result = result.filter(p => p.category === urlCategory);
         }
 
-        if (searchTerm) {
+        if (searchTerm.trim()) {
             const lower = searchTerm.toLowerCase();
             result = result.filter(p =>
                 p.name.toLowerCase().includes(lower) ||
-                p.description?.toLowerCase().includes(lower)
+                (p.description && p.description.toLowerCase().includes(lower))
             );
         }
 
-        setFilteredProducts(result);
-    }, [searchTerm, selectedCategory, products]);
+        return result;
+    }, [products, urlCategory, searchTerm]);
+
+    const handleCategoryClick = (cat: string) => {
+        if (cat === 'All') {
+            router.push('/');
+        } else {
+            router.push(`/?category=${encodeURIComponent(cat)}`);
+        }
+    };
 
     return (
-        <div className="min-h-screen bg-background">
-            {/* Header */}
-            <header className="sticky top-0 z-10 bg-white/80 backdrop-blur-md border-b px-6 py-4 flex items-center justify-between">
-                <Link href="/" className="text-2xl font-bold text-primary">SweetShop</Link>
-                <div className="flex gap-4 items-center">
-                    <Link href="/cart">
-                        <Button variant="outline" className="relative">
-                            <ShoppingCart className="h-5 w-5 mr-2" />
-                            Cart
-                            {count > 0 && (
-                                <span className="absolute -top-2 -right-2 bg-primary text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
-                                    {count}
-                                </span>
-                            )}
-                        </Button>
-                    </Link>
-                </div>
-            </header>
+        <div className="w-full">
+            {/* Hero Section */}
+            <section className="bg-gradient-to-b from-secondary/50 to-background py-16 text-center space-y-6 px-4 border-b">
+                <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight">
+                    Fresh Handmade Desserts
+                </h1>
+                <p className="text-muted-foreground max-w-xl mx-auto text-lg">
+                    Discover our collection of artisanal cakes, perfectly baked cookies, and beautiful gift boxes.
+                </p>
 
-            {/* Hero */}
-            <section className="bg-secondary/30 py-12 text-center space-y-4 px-4">
-                <h2 className="text-4xl font-extrabold">Fresh Handmade Desserts</h2>
-                <div className="max-w-md mx-auto relative">
-                    <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                <div className="max-w-md mx-auto relative pt-4">
+                    <Search className="absolute left-3 top-7 h-4 w-4 text-muted-foreground" />
                     <Input
                         placeholder="Search for something sweet..."
-                        className="pl-10"
+                        className="pl-10 shadow-sm"
                         value={searchTerm}
                         onChange={e => setSearchTerm(e.target.value)}
                     />
                 </div>
+            </section>
 
-                {/* Categories */}
-                <div className="flex flex-wrap justify-center gap-2 mt-4">
-                    {CATEGORIES.map(cat => (
+            {/* Main Content Area */}
+            <div className="container mx-auto px-4 py-8 md:py-12 flex flex-col md:flex-row gap-8">
+
+                {/* Desktop Sidebar Filters */}
+                <aside className="hidden md:block w-64 shrink-0 space-y-6">
+                    <div>
+                        <h3 className="font-semibold text-lg mb-4">Categories</h3>
+                        <div className="flex flex-col space-y-2">
+                            {categories.map(cat => (
+                                <button
+                                    key={cat}
+                                    onClick={() => handleCategoryClick(cat)}
+                                    className={`text-left px-3 py-2 rounded-md text-sm font-medium transition-colors ${urlCategory === cat
+                                            ? 'bg-primary text-primary-foreground'
+                                            : 'hover:bg-secondary text-muted-foreground hover:text-foreground'
+                                        }`}
+                                >
+                                    {cat}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+                </aside>
+
+                {/* Mobile Categories (Horizontal Scroll) */}
+                <div className="md:hidden flex overflow-x-auto pb-4 gap-2 snap-x scrollbar-hide">
+                    {categories.map(cat => (
                         <Button
                             key={cat}
-                            variant={selectedCategory === cat ? 'default' : 'outline'}
-                            size="sm"
-                            onClick={() => setSelectedCategory(cat)}
-                            className="rounded-full"
+                            variant={urlCategory === cat ? 'default' : 'outline'}
+                            onClick={() => handleCategoryClick(cat)}
+                            className="snap-start whitespace-nowrap rounded-full"
                         >
                             {cat}
                         </Button>
                     ))}
                 </div>
-            </section>
 
-            {/* Grid */}
-            <main className="container mx-auto px-4 py-8">
-                {loading ? (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-                        {Array.from({ length: 8 }).map((_, i) => (
-                            <ProductSkeleton key={i} />
-                        ))}
+                {/* Product Grid Area */}
+                <div className="flex-1">
+                    <div className="mb-6 flex items-center justify-between">
+                        <h2 className="text-2xl font-bold tracking-tight">
+                            {urlCategory === 'All' ? 'All Products' : urlCategory}
+                        </h2>
+                        <span className="text-sm text-muted-foreground font-medium">
+                            {filteredProducts.length} items
+                        </span>
                     </div>
-                ) : filteredProducts.length === 0 ? (
-                    <div className="text-center py-20 text-muted-foreground">
-                        <p>No products found matching your criteria.</p>
-                        <Button variant="link" onClick={() => { setSearchTerm(''); setSelectedCategory('All'); }}>Clear Filters</Button>
-                    </div>
-                ) : (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-                        {filteredProducts.map(product => (
-                            <Card key={product.id} className="overflow-hidden hover:shadow-lg transition-shadow group" data-testid={`product-card-${product.id}`}>
-                                <Link href={`/product/${product.id}`} className="block relative aspect-square bg-secondary cursor-pointer">
-                                    {product.image_url ? (
-                                        <Image
-                                            src={product.image_url}
-                                            alt={product.name}
-                                            fill
-                                            className="object-cover group-hover:scale-105 transition-transform duration-300"
-                                        />
-                                    ) : (
-                                        <div className="flex items-center justify-center h-full text-muted-foreground">No Photo</div>
-                                    )}
-                                    {product.stock_status !== 'IN_STOCK' && (
-                                        <div className="absolute inset-0 bg-black/50 flex items-center justify-center text-white font-bold text-lg backdrop-blur-sm">
-                                            {product.stock_status?.replace('_', ' ')}
-                                        </div>
-                                    )}
-                                </Link>
-                                <CardHeader className="p-4 pb-0">
-                                    <CardTitle className="text-lg flex justify-between">
-                                        <Link href={`/product/${product.id}`} className="hover:underline">
-                                            {product.name}
-                                        </Link>
-                                        <span>${product.price}</span>
-                                    </CardTitle>
-                                </CardHeader>
-                                <CardContent className="p-4 pt-2 text-sm text-muted-foreground">
-                                    {product.description || "Detailed description coming soon..."}
-                                </CardContent>
-                                <CardFooter className="p-4 pt-0">
-                                    <Button
-                                        className="w-full"
-                                        disabled={product.stock_status !== 'IN_STOCK'}
-                                        onClick={() => addToCart(product)}
-                                        data-testid={`add-to-cart-${product.id}`}
-                                    >
-                                        Add to Cart
-                                    </Button>
-                                </CardFooter>
-                            </Card>
-                        ))}
-                    </div>
-                )}
-            </main>
+
+                    {loading ? (
+                        <div className="py-20 flex justify-center"><Loader2 className="h-10 w-10 text-primary animate-spin" /></div>
+                    ) : (
+                        <ProductGrid products={filteredProducts} />
+                    )}
+                </div>
+            </div>
         </div>
     );
 }
