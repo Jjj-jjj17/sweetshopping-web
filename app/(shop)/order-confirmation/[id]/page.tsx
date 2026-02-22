@@ -1,142 +1,129 @@
-"use client";
-
-import React, { useEffect, useState } from 'react';
-import { supabase } from '@/lib/supabase';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
-import { CheckCircle, Package, Truck, ArrowLeft, Loader2 } from 'lucide-react';
+import { createClient } from '@supabase/supabase-js';
 import Link from 'next/link';
+import { Button } from '@/components/ui/button';
 
-interface OrderItem {
-    name: string;
-    price: number;
-    quantity: number;
-    productId: string;
-    image?: string;
-}
+export default async function OrderConfirmationPage({
+    params
+}: {
+    params: { id: string }
+}) {
+    console.log('=== ORDER CONFIRMATION PAGE ===')
+    console.log('Raw params:', params)
+    console.log('Order ID to fetch:', params.id)
+    console.log('ID type:', typeof params.id)
+    console.log('ID length:', params.id?.length)
 
-interface OrderDetails {
-    id: string;
-    customer_name: string;
-    customer_email: string;
-    delivery_address: string;
-    items: OrderItem[];
-    total: number;
-    status: string;
-    created_at: string;
-}
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+    const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
-export default function OrderConfirmationPage({ params }: { params: { id: string } }) {
-    const { id } = params;
-    const [order, setOrder] = useState<OrderDetails | null>(null);
-    const [loading, setLoading] = useState(true);
+    console.log('Supabase URL configured:', !!supabaseUrl)
+    console.log('Supabase Key configured:', !!supabaseKey)
 
-    useEffect(() => {
-        async function fetchOrder() {
-            const { data, error } = await supabase
-                .from('orders')
-                .select('*')
-                .eq('id', id)
-                .single();
+    const supabase = createClient(supabaseUrl!, supabaseKey!)
 
-            if (data && !error) {
-                setOrder(data as OrderDetails);
-            }
-            setLoading(false);
-        }
+    console.log('Attempting to fetch order...')
 
-        fetchOrder();
-    }, [id]);
+    const { data: order, error, status, statusText } = await supabase
+        .from('orders')
+        .select('*')
+        .eq('id', params.id)
+        .single()
 
-    if (loading) {
-        return <div className="min-h-[60vh] flex items-center justify-center"><Loader2 className="h-10 w-10 animate-spin text-primary" /></div>;
+    console.log('Fetch completed')
+    console.log('Status:', status)
+    console.log('Status Text:', statusText)
+    console.log('Error:', error)
+    console.log('Order data:', order ? 'Exists' : 'Null')
+
+    if (error) {
+        console.error('=== FETCH ERROR DETAILS ===')
+        console.error('Error code:', error.code)
+        console.error('Error message:', error.message)
+        console.error('Error details:', error.details)
+        console.error('Error hint:', error.hint)
+
+        // Show detailed debug page
+        return (
+            <div className="container mx-auto py-12 px-4">
+                <div className="max-w-2xl mx-auto bg-red-50 border border-red-200 rounded-lg p-6">
+                    <h1 className="text-2xl font-bold text-red-600 mb-4">
+                        Order Fetch Failed (Debug Mode)
+                    </h1>
+                    <div className="space-y-2 text-sm text-foreground">
+                        <p><strong>Order ID:</strong> {params.id}</p>
+                        <p><strong>Status:</strong> {status}</p>
+                        <p><strong>Error Code:</strong> {error.code}</p>
+                        <p><strong>Error Message:</strong> {error.message}</p>
+                        <p><strong>Details:</strong> {error.details}</p>
+                        <p><strong>Hint:</strong> {error.hint}</p>
+                    </div>
+                    <pre className="mt-4 p-4 bg-gray-900 text-green-400 rounded text-xs overflow-auto">
+                        {JSON.stringify({ error, params, status }, null, 2)}
+                    </pre>
+                    <div className="mt-6">
+                        <Link href="/"><Button variant="outline">Back to Shop</Button></Link>
+                    </div>
+                </div>
+            </div>
+        )
     }
 
     if (!order) {
+        console.error('No order returned but also no error')
         return (
-            <div className="container mx-auto px-4 py-20 text-center">
-                <h1 className="text-2xl font-bold mb-4">Order Not Found</h1>
-                <p className="text-muted-foreground mb-8">We couldn't find the details for this order. It might be invalid or deleted.</p>
-                <Link href="/"><Button>Back to Shop</Button></Link>
+            <div className="container mx-auto py-12 px-4">
+                <div className="max-w-2xl mx-auto bg-yellow-50 border border-yellow-200 rounded-lg p-6">
+                    <h1 className="text-2xl font-bold text-red-600">
+                        Order Not Found (Null Data)
+                    </h1>
+                    <p className="mt-4 text-foreground">Order ID: {params.id}</p>
+                    <div className="mt-6">
+                        <Link href="/"><Button variant="outline">Back to Shop</Button></Link>
+                    </div>
+                </div>
             </div>
-        );
+        )
     }
 
-    // Parse items if they accidentally come back as an unparsed string
-    const items: OrderItem[] = typeof order.items === 'string' ? JSON.parse(order.items) : order.items;
+    console.log('=== ORDER FETCH SUCCESS ===')
+    console.log('Order customer:', order.customer_name)
+    console.log('Order total:', order.total)
 
+    // Render success page
     return (
-        <div className="container mx-auto px-4 py-12 max-w-3xl">
-            {/* Header */}
-            <div className="flex flex-col items-center justify-center text-center space-y-4 mb-10">
-                <div className="h-20 w-20 bg-green-100 rounded-full flex items-center justify-center">
-                    <CheckCircle className="h-10 w-10 text-green-600" />
+        <div className="container mx-auto py-12 px-4">
+            <div className="max-w-2xl mx-auto text-center">
+                <div className="mb-8">
+                    <div className="text-6xl mb-4">✅</div>
+                    <h1 className="text-3xl font-bold text-green-600 mb-2">
+                        訂單已確認！
+                    </h1>
+                    <p className="text-muted-foreground">
+                        訂單編號：{order.id}
+                    </p>
                 </div>
-                <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight">Order Confirmed!</h1>
-                <p className="text-lg text-muted-foreground">
-                    Thank you, <span className="font-semibold text-foreground">{order.customer_name}</span>. Your order has been received.
-                </p>
-                <div className="bg-secondary px-4 py-2 rounded-md mt-2 font-mono text-sm inline-block">
-                    Order #{order.id.split('-')[0].toUpperCase()}
-                </div>
-            </div>
 
-            {/* Details Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-                <Card>
-                    <CardContent className="p-6 flex gap-4">
-                        <Package className="h-6 w-6 text-primary shrink-0" />
-                        <div>
-                            <h3 className="font-semibold mb-1">Items Ordered</h3>
-                            <p className="text-sm text-muted-foreground">{items.length} unique items</p>
-                            <p className="font-bold text-lg mt-2">${Number(order.total).toFixed(2)}</p>
-                        </div>
-                    </CardContent>
-                </Card>
-
-                <Card>
-                    <CardContent className="p-6 flex gap-4">
-                        <Truck className="h-6 w-6 text-primary shrink-0" />
-                        <div>
-                            <h3 className="font-semibold mb-1">Delivery Info</h3>
-                            <p className="text-sm text-muted-foreground line-clamp-2">{order.delivery_address}</p>
-                            <p className="text-sm text-muted-foreground mt-1">{order.customer_email}</p>
-                        </div>
-                    </CardContent>
-                </Card>
-            </div>
-
-            {/* Line Items */}
-            <Card className="mb-10 overflow-hidden">
-                <div className="bg-secondary/50 px-6 py-4 border-b">
-                    <h2 className="font-semibold text-lg">Order Summary</h2>
+                <div className="bg-card border rounded-lg p-6 text-left shadow-sm">
+                    <h2 className="text-xl font-semibold mb-4 text-foreground">訂單詳情</h2>
+                    <div className="space-y-2 text-sm text-muted-foreground">
+                        <p><strong className="text-foreground">客戶姓名：</strong>{order.customer_name}</p>
+                        <p><strong className="text-foreground">Email：</strong>{order.customer_email}</p>
+                        <p><strong className="text-foreground">電話：</strong>{order.customer_phone}</p>
+                        <p><strong className="text-foreground">取貨門市：</strong>{order.delivery_address}</p>
+                        <p className="text-lg font-bold mt-4 text-primary">
+                            總金額：${order.total}
+                        </p>
+                    </div>
                 </div>
-                <div className="divide-y">
-                    {items.map((item, idx) => (
-                        <div key={idx} className="p-6 flex justify-between items-center sm:items-start">
-                            <div className="flex-1">
-                                <h4 className="font-semibold">{item.name}</h4>
-                                <p className="text-sm text-muted-foreground">Qty: {item.quantity}</p>
-                            </div>
-                            <div className="font-bold">
-                                ${(Number(item.price) * item.quantity).toFixed(2)}
-                            </div>
-                        </div>
-                    ))}
-                </div>
-                <div className="bg-secondary/10 px-6 py-4 flex justify-between items-center border-t">
-                    <span className="font-semibold">Total Paid</span>
-                    <span className="text-xl font-bold text-primary">${Number(order.total).toFixed(2)}</span>
-                </div>
-            </Card>
 
-            <div className="flex justify-center">
-                <Link href="/">
-                    <Button variant="outline" size="lg">
-                        <ArrowLeft className="h-4 w-4 mr-2" /> Continue Shopping
-                    </Button>
-                </Link>
+                <div className="mt-8">
+                    <Link href="/">
+                        <Button size="lg" className="w-full sm:w-auto">
+                            繼續購物
+                        </Button>
+                    </Link>
+                </div>
             </div>
         </div>
-    );
+    )
 }
