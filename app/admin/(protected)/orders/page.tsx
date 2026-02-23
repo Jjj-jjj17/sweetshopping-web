@@ -4,7 +4,8 @@ import { supabase } from '@/lib/supabase'
 import { useEffect, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
-import { Loader2, RefreshCw, ChevronDown } from 'lucide-react'
+import { Loader2, RefreshCw, ChevronDown, ArrowLeft } from 'lucide-react'
+import Link from 'next/link'
 
 interface Order {
     id: string
@@ -20,10 +21,10 @@ interface Order {
 }
 
 const STATUS_MAP: Record<string, { label: string; color: string }> = {
-    pending: { label: '待處理', color: 'bg-yellow-100 text-yellow-800' },
-    processing: { label: '處理中', color: 'bg-blue-100 text-blue-800' },
-    completed: { label: '已完成', color: 'bg-green-100 text-green-800' },
-    cancelled: { label: '已取消', color: 'bg-red-100 text-red-800' },
+    pending: { label: '待處理', color: 'bg-yellow-100 text-yellow-900' },
+    processing: { label: '處理中', color: 'bg-blue-100 text-blue-900' },
+    completed: { label: '已完成', color: 'bg-green-100 text-green-900' },
+    cancelled: { label: '已取消', color: 'bg-red-100 text-red-900' },
 }
 
 export default function AdminOrdersPage() {
@@ -104,10 +105,18 @@ export default function AdminOrdersPage() {
 
     return (
         <div>
+            <Link
+                href="/admin/dashboard"
+                className="inline-flex items-center gap-2 mb-6 px-4 py-2 bg-secondary text-gray-800 rounded-lg hover:bg-secondary/80 transition text-sm font-medium"
+            >
+                <ArrowLeft className="w-4 h-4" />
+                返回儀表板
+            </Link>
+
             <div className="flex justify-between items-center mb-6">
                 <div>
-                    <h1 className="text-3xl font-bold">訂單管理</h1>
-                    <p className="text-muted-foreground text-sm mt-1">
+                    <h1 className="text-3xl font-bold text-gray-900">訂單管理</h1>
+                    <p className="text-sm text-gray-700 mt-1">
                         共 {orders.length} 筆訂單
                     </p>
                 </div>
