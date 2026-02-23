@@ -8,9 +8,10 @@ import { SettingsPanel } from '@/components/SettingsPanel';
 import { CreateOrderModal } from '@/components/CreateOrderModal';
 import { AnalyticsPanel } from '@/components/AnalyticsPanel';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input'; // Search bar
-import { Settings, Search, PlusCircle, LogOut, BarChart3 } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Settings, Search, PlusCircle, LogOut, BarChart3, Package, ShoppingCart, Plus } from 'lucide-react';
 import { OrderStatus } from '@/types';
+import Link from 'next/link';
 
 export default function Home() {
   const { isAuthenticated, isLoading, orders, logout, warning } = useOrders();
@@ -111,6 +112,48 @@ export default function Home() {
       </header>
 
       <div className="container mx-auto max-w-5xl p-4 space-y-6">
+        {/* Quick Access Navigation */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <Link
+            href="/admin/products"
+            className="bg-background border-2 border-blue-200 rounded-lg p-5 hover:border-blue-400 hover:shadow-lg transition group"
+          >
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-lg font-semibold group-hover:text-blue-600">商品管理</h3>
+                <p className="text-sm text-muted-foreground mt-1">查看、編輯、刪除商品</p>
+              </div>
+              <Package className="w-8 h-8 text-blue-600" />
+            </div>
+          </Link>
+
+          <Link
+            href="/admin/products/new"
+            className="bg-gradient-to-br from-green-50 to-green-100 border-2 border-green-300 rounded-lg p-5 hover:border-green-500 hover:shadow-lg transition group"
+          >
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-lg font-semibold group-hover:text-green-700">新增商品</h3>
+                <p className="text-sm text-muted-foreground mt-1">上傳新商品到商店</p>
+              </div>
+              <Plus className="w-8 h-8 text-green-600" />
+            </div>
+          </Link>
+
+          <Link
+            href="/admin/orders"
+            className="bg-background border-2 border-purple-200 rounded-lg p-5 hover:border-purple-400 hover:shadow-lg transition group"
+          >
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-lg font-semibold group-hover:text-purple-600">訂單管理</h3>
+                <p className="text-sm text-muted-foreground mt-1">查看和處理客戶訂單</p>
+              </div>
+              <ShoppingCart className="w-8 h-8 text-purple-600" />
+            </div>
+          </Link>
+        </div>
+
         {view === 'KITCHEN' && (
           <>
             {/* Controls */}
