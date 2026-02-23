@@ -4,7 +4,7 @@ import React, { useEffect, useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { Button } from '@/components/ui/button';
-import { LayoutDashboard, Package, LogOut, Home, Loader2 } from 'lucide-react';
+import { LayoutDashboard, Package, ShoppingCart, LogOut, Home, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
@@ -96,7 +96,13 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                     <Link href="/admin/dashboard">
                         <Button variant={isActive('/admin/dashboard') ? 'default' : 'ghost'} size="sm" className="gap-2">
                             <LayoutDashboard className="h-4 w-4" />
-                            <span className="hidden md:inline">Orders</span>
+                            <span className="hidden md:inline">Dashboard</span>
+                        </Button>
+                    </Link>
+                    <Link href="/admin/orders">
+                        <Button variant={isActive('/admin/orders') ? 'default' : 'ghost'} size="sm" className="gap-2">
+                            <ShoppingCart className="h-4 w-4" />
+                            <span className="hidden md:inline">訂單管理</span>
                         </Button>
                     </Link>
                     <Link href="/admin/products">
