@@ -6,6 +6,7 @@ import { ProductGrid } from '@/components/shop/ProductGrid';
 import { Button } from '@/components/ui/button';
 import { Search, Sparkles, X } from 'lucide-react';
 import { useSearchParams, useRouter } from 'next/navigation';
+import { useLanguage } from '@/context/LanguageContext';
 
 interface ShopHomeClientProps {
     initialProducts: Product[];
@@ -14,17 +15,16 @@ interface ShopHomeClientProps {
 export default function ShopHomeClient({ initialProducts }: ShopHomeClientProps) {
     const searchParams = useSearchParams();
     const router = useRouter();
+    const { t } = useLanguage();
 
     const urlCategory = searchParams.get('category') || 'All';
     const [searchTerm, setSearchTerm] = useState('');
 
-    // Extract categories
     const categories = useMemo(() => {
         const cats = new Set(initialProducts.map(p => p.category).filter(Boolean));
         return ['All', ...Array.from(cats)];
     }, [initialProducts]);
 
-    // Apply Filters
     const filteredProducts = useMemo(() => {
         let result = initialProducts;
 
@@ -56,24 +56,22 @@ export default function ShopHomeClient({ initialProducts }: ShopHomeClientProps)
         <div className="w-full">
             {/* Hero Section */}
             <section className="relative overflow-hidden py-20 md:py-28 px-4">
-                {/* Gradient background */}
                 <div className="absolute inset-0 bg-gradient-to-b from-cream-100 via-cream-50 to-background" />
                 <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-primary/5 rounded-full blur-3xl" />
 
                 <div className="relative container mx-auto text-center space-y-8 max-w-3xl">
                     <div className="inline-flex items-center gap-2 bg-white/80 backdrop-blur-sm px-4 py-2 rounded-full text-sm font-medium text-chocolate-600 shadow-apple">
                         <Sparkles className="h-4 w-4 text-primary" />
-                        每日新鮮手工現做
+                        {t('hero.badge')}
                     </div>
 
                     <h1 className="text-5xl md:text-7xl font-extrabold tracking-tight text-chocolate-700">
-                        Fresh Handmade
-                        <span className="block text-primary mt-2">Desserts</span>
+                        {t('hero.title1')}
+                        <span className="block text-primary mt-2">{t('hero.title2')}</span>
                     </h1>
 
                     <p className="text-lg md:text-xl text-chocolate-500 max-w-xl mx-auto leading-relaxed">
-                        Discover our collection of artisanal cakes, perfectly baked cookies,
-                        and beautiful gift boxes.
+                        {t('hero.subtitle')}
                     </p>
 
                     {/* Search Bar */}
@@ -82,7 +80,7 @@ export default function ShopHomeClient({ initialProducts }: ShopHomeClientProps)
                             <Search className="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-chocolate-500/50 group-focus-within:text-primary transition-colors" />
                             <input
                                 type="text"
-                                placeholder="搜尋商品名稱、分類..."
+                                placeholder={t('common.searchPlaceholder')}
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
                                 className="w-full pl-14 pr-12 py-4 md:py-5 rounded-2xl bg-white shadow-apple-lg border border-border/50 text-lg text-foreground placeholder:text-chocolate-500/40 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/50 transition-apple"
@@ -100,7 +98,7 @@ export default function ShopHomeClient({ initialProducts }: ShopHomeClientProps)
                 </div>
             </section>
 
-            {/* Main Content Area */}
+            {/* Main Content */}
             <div className="container mx-auto px-4 py-10 md:py-14 flex flex-col md:flex-row gap-10">
                 {/* Desktop Sidebar */}
                 <aside className="hidden md:block w-56 shrink-0">
@@ -140,7 +138,7 @@ export default function ShopHomeClient({ initialProducts }: ShopHomeClientProps)
                     <div className="mb-8 flex items-end justify-between">
                         <div>
                             <h2 className="text-3xl font-bold tracking-tight text-foreground">
-                                {urlCategory === 'All' ? 'All Products' : urlCategory}
+                                {urlCategory === 'All' ? t('common.allProducts') : urlCategory}
                             </h2>
                             {searchTerm && (
                                 <p className="text-sm text-muted-foreground mt-1">
@@ -149,21 +147,21 @@ export default function ShopHomeClient({ initialProducts }: ShopHomeClientProps)
                             )}
                         </div>
                         <span className="text-sm text-muted-foreground font-medium tabular-nums">
-                            {filteredProducts.length} items
+                            {filteredProducts.length} {t('common.items')}
                         </span>
                     </div>
 
                     {filteredProducts.length === 0 ? (
                         <div className="text-center py-20 rounded-2xl border-2 border-dashed border-border bg-cream-50">
                             <p className="text-xl text-chocolate-500 mb-4">
-                                {searchTerm ? '找不到符合的商品' : '目前沒有商品'}
+                                {searchTerm ? t('common.noMatch') : t('common.noProducts')}
                             </p>
                             {searchTerm && (
                                 <button
                                     onClick={() => setSearchTerm('')}
                                     className="text-primary hover:text-primary/80 font-semibold transition-colors"
                                 >
-                                    清除搜尋
+                                    {t('common.clearSearch')}
                                 </button>
                             )}
                         </div>

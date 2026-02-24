@@ -3,7 +3,7 @@
 import { supabase } from '@/lib/supabase'
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
-import { Package, ShoppingCart, Plus, TrendingUp, DollarSign, Loader2 } from 'lucide-react'
+import { Package, ShoppingCart, Plus, TrendingUp, DollarSign, Loader2, AlertTriangle } from 'lucide-react'
 
 interface DashboardStats {
   totalRevenue: number
@@ -11,6 +11,12 @@ interface DashboardStats {
   totalOrders: number
   pendingOrders: number
   topProducts: Array<{ name: string; count: number; revenue: number }>
+}
+
+interface LowStockProduct {
+  id: string
+  name: string
+  stock: number
 }
 
 export default function DashboardPage() {
@@ -21,6 +27,7 @@ export default function DashboardPage() {
     pendingOrders: 0,
     topProducts: []
   })
+  const [lowStockProducts, setLowStockProducts] = useState<LowStockProduct[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -65,6 +72,18 @@ export default function DashboardPage() {
         .slice(0, 5)
 
       setStats({ totalRevenue, todayRevenue, totalOrders: orders.length, pendingOrders, topProducts })
+
+      // Fetch low stock products
+      const { data: lowStock } = await supabase
+        .from('products')
+        .select('id, name, stock')
+        .lte('stock', 5)
+        .eq('is_available', true)
+        .order('stock', { ascending: true })
+
+      if (lowStock) {
+        setLowStockProducts(lowStock as LowStockProduct[])
+      }
     } catch (error) {
       console.error('Failed to fetch dashboard stats:', error)
     } finally {
@@ -82,6 +101,26 @@ export default function DashboardPage() {
 
   return (
     <div>
+      {/* Low Stock Alert */}
+      {lowStockProducts.length > 0 && (
+        <div className="bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-xl p-6 mb-8 shadow-lg">
+          <div className="flex items-center gap-3 mb-3">
+            <AlertTriangle className="w-6 h-6" />
+            <h3 className="text-xl font-bold">⚠️ 庫存不足警告</h3>
+          </div>
+          <div className="space-y-2">
+            {lowStockProducts.map(product => (
+              <div key={product.id} className="bg-white/20 rounded-lg p-3 flex justify-between items-center">
+                <span className="font-semibold">{product.name}</span>
+                <span className="bg-white text-orange-600 px-3 py-1 rounded-full text-sm font-bold">
+                  剩餘 {product.stock} 件
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Quick Access Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
         <Link

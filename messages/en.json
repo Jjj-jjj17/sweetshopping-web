@@ -1,0 +1,60 @@
+{
+    "common": {
+        "home": "Home",
+        "products": "Products",
+        "allProducts": "All Products",
+        "cart": "Cart",
+        "checkout": "Checkout",
+        "search": "Search",
+        "searchPlaceholder": "Search products, categories...",
+        "addToCart": "Add to Cart",
+        "addedToCart": "Added to cart ✨",
+        "viewDetails": "View Details",
+        "total": "Total",
+        "continue": "Continue Shopping",
+        "inStock": "In Stock",
+        "soldOut": "Sold Out",
+        "items": "items",
+        "clearSearch": "Clear search",
+        "noProducts": "No products available",
+        "noMatch": "No products found"
+    },
+    "hero": {
+        "badge": "Freshly Handmade Daily",
+        "title1": "Fresh Handmade",
+        "title2": "Desserts",
+        "subtitle": "Discover our collection of artisanal cakes, cookies, and gift boxes"
+    },
+    "checkout": {
+        "title": "Secure Checkout",
+        "customerDetails": "Customer Details",
+        "name": "Name",
+        "namePlaceholder": "Full Name",
+        "email": "Email",
+        "emailPlaceholder": "Email Address",
+        "phone": "Phone",
+        "phonePlaceholder": "Phone Number",
+        "deliveryInfo": "Delivery Information",
+        "deliveryAddress": "7-ELEVEN Pickup Location",
+        "addressPlaceholder": "Enter your nearest 7-ELEVEN store address",
+        "addressHelp": "Your order will be delivered to your selected 7-ELEVEN store",
+        "specialInstructions": "Special Instructions (Optional)",
+        "placeOrder": "Place Order",
+        "processing": "Processing...",
+        "emptyCart": "Cart is Empty",
+        "emptyCartMsg": "Add items to your cart before checking out",
+        "returnToShop": "Return to Shop",
+        "orderSummary": "Order Summary",
+        "qty": "Qty"
+    },
+    "footer": {
+        "description": "Handcrafted desserts and fresh pastries delivered with care. Treat yourself to something sweet!",
+        "storeHours": "Store Hours",
+        "weekdays": "Mon - Fri: 9:00 AM - 7:00 PM",
+        "saturday": "Saturday: 10:00 AM - 5:00 PM",
+        "sunday": "Sunday: Closed",
+        "links": "Links",
+        "privacy": "Privacy Policy",
+        "terms": "Terms of Service"
+    }
+}
