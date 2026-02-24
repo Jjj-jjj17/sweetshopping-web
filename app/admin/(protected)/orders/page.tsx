@@ -146,9 +146,9 @@ export default function AdminOrdersPage() {
                                     {/* Top Row: Customer + Total */}
                                     <div className="flex flex-col sm:flex-row justify-between gap-4 mb-4">
                                         <div>
-                                            <h3 className="text-lg font-semibold">{order.customer_name}</h3>
-                                            <p className="text-sm text-muted-foreground">{order.customer_email}</p>
-                                            <p className="text-sm text-muted-foreground">{order.customer_phone}</p>
+                                            <h3 className="text-lg font-semibold text-gray-900">{order.customer_name}</h3>
+                                            <p className="text-sm text-gray-700">{order.customer_email}</p>
+                                            <p className="text-sm text-gray-700">{order.customer_phone}</p>
                                         </div>
                                         <div className="text-right">
                                             <p className="text-2xl font-bold text-primary">
@@ -162,15 +162,15 @@ export default function AdminOrdersPage() {
 
                                     {/* Delivery Address */}
                                     <div className="mb-4 p-3 bg-secondary/30 rounded-md">
-                                        <p className="text-sm font-semibold mb-1">取貨門市：</p>
-                                        <p className="text-sm text-muted-foreground">{order.delivery_address}</p>
+                                        <p className="text-sm font-semibold text-gray-900 mb-1">取貨門市：</p>
+                                        <p className="text-sm text-gray-800">{order.delivery_address}</p>
                                     </div>
 
                                     {/* Special Instructions */}
                                     {order.special_instructions && (
                                         <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-md">
-                                            <p className="text-sm font-semibold mb-1">備註：</p>
-                                            <p className="text-sm text-muted-foreground">{order.special_instructions}</p>
+                                            <p className="text-sm font-semibold text-gray-900 mb-1">備註：</p>
+                                            <p className="text-sm text-gray-800">{order.special_instructions}</p>
                                         </div>
                                     )}
 

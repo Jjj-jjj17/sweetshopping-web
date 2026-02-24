@@ -4,7 +4,7 @@ import { Product } from '@/types';
 import { Loader2 } from 'lucide-react';
 import { Suspense } from 'react';
 
-export const revalidate = 60; // Revalidate cache every 60 seconds
+export const dynamic = 'force-dynamic'; // Always fetch fresh - never serve stale cache
 
 export default async function ShopPage() {
     console.log('=== SHOP PAGE SSR DEBUG ===')
