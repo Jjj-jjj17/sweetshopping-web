@@ -34,6 +34,7 @@
   /* Shadows */
   --shadow-apple: 0 2px 8px rgba(0, 0, 0, 0.04);
   --shadow-apple-lg: 0 8px 24px rgba(0, 0, 0, 0.08);
+  --shadow-apple-hover: 0 12px 32px rgba(0, 0, 0, 0.12);
   --shadow-apple-xl: 0 12px 40px rgba(0, 0, 0, 0.12);
 
   --radius-lg: var(--radius);

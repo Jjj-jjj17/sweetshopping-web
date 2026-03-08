@@ -2,9 +2,7 @@
 
 import { supabase } from '@/lib/supabase'
 import { useEffect, useState } from 'react'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent } from '@/components/ui/card'
-import { Loader2, RefreshCw, ChevronDown, ArrowLeft } from 'lucide-react'
+import { Loader2, RefreshCw, ChevronDown, ArrowLeft, Clock, Package, CheckCircle, XCircle } from 'lucide-react'
 import Link from 'next/link'
 
 interface Order {
@@ -20,11 +18,11 @@ interface Order {
     items: any[]
 }
 
-const STATUS_MAP: Record<string, { label: string; color: string }> = {
-    pending: { label: '待處理', color: 'bg-yellow-100 text-yellow-900' },
-    processing: { label: '處理中', color: 'bg-blue-100 text-blue-900' },
-    completed: { label: '已完成', color: 'bg-green-100 text-green-900' },
-    cancelled: { label: '已取消', color: 'bg-red-100 text-red-900' },
+const STATUS_CONFIG: Record<string, { label: string; bg: string; text: string; icon: any }> = {
+    pending: { label: '待處理', bg: 'bg-yellow-100', text: 'text-yellow-900', icon: Clock },
+    processing: { label: '處理中', bg: 'bg-blue-500', text: 'text-white', icon: Package },
+    completed: { label: '已完成', bg: 'bg-green-500', text: 'text-white', icon: CheckCircle },
+    cancelled: { label: '已取消', bg: 'bg-red-500', text: 'text-white', icon: XCircle },
 }
 
 export default function AdminOrdersPage() {
@@ -40,23 +38,17 @@ export default function AdminOrdersPage() {
         setLoading(true)
         setError(null)
         try {
-            console.log('Fetching orders...')
-
             const { data, error: fetchError } = await supabase
                 .from('orders')
                 .select('*')
                 .order('created_at', { ascending: false })
 
-            console.log('Orders fetch result:', { count: data?.length, error: fetchError })
-
             if (fetchError) {
-                console.error('Fetch error:', fetchError)
                 setError(fetchError.message)
             } else {
                 setOrders(data || [])
             }
         } catch (err) {
-            console.error('Catch error:', err)
             setError(err instanceof Error ? err.message : 'Unknown error')
         } finally {
             setLoading(false)
@@ -72,7 +64,6 @@ export default function AdminOrdersPage() {
         if (updateError) {
             alert('Failed to update status: ' + updateError.message)
         } else {
-            // Optimistic update
             setOrders(prev =>
                 prev.map(o => o.id === orderId ? { ...o, status: newStatus } : o)
             )
@@ -81,8 +72,11 @@ export default function AdminOrdersPage() {
 
     if (loading) {
         return (
-            <div className="flex items-center justify-center py-20">
-                <Loader2 className="animate-spin h-8 w-8 text-primary" />
+            <div className="min-h-[60vh] flex items-center justify-center">
+                <div className="text-center">
+                    <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+                    <p className="text-gray-500">載入中...</p>
+                </div>
             </div>
         )
     }
@@ -90,132 +84,135 @@ export default function AdminOrdersPage() {
     if (error) {
         return (
             <div className="max-w-2xl mx-auto py-12">
-                <Card className="border-red-200 bg-red-50">
-                    <CardContent className="p-6">
-                        <h2 className="text-xl font-bold text-red-600 mb-2">Error Loading Orders</h2>
-                        <p className="text-red-700 mb-4">{error}</p>
-                        <Button onClick={fetchOrders} variant="destructive">
-                            Retry
-                        </Button>
-                    </CardContent>
-                </Card>
+                <div className="bg-white rounded-2xl shadow-apple border border-red-100 p-8 text-center">
+                    <XCircle className="w-12 h-12 text-red-400 mx-auto mb-4" />
+                    <h2 className="text-xl font-bold text-gray-900 mb-2">載入失敗</h2>
+                    <p className="text-gray-600 mb-6">{error}</p>
+                    <button
+                        onClick={fetchOrders}
+                        className="px-6 py-2.5 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition font-medium"
+                    >
+                        重試
+                    </button>
+                </div>
             </div>
         )
     }
 
     return (
-        <div>
+        <div className="py-4">
             <Link
                 href="/admin/dashboard"
-                className="inline-flex items-center gap-2 mb-6 px-4 py-2 bg-secondary text-gray-800 rounded-lg hover:bg-secondary/80 transition text-sm font-medium"
+                className="inline-flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-all text-gray-600 font-medium mb-8 shadow-sm text-sm"
             >
                 <ArrowLeft className="w-4 h-4" />
                 返回儀表板
             </Link>
 
-            <div className="flex justify-between items-center mb-6">
+            <div className="flex justify-between items-center mb-8">
                 <div>
-                    <h1 className="text-3xl font-bold text-gray-900">訂單管理</h1>
-                    <p className="text-sm text-gray-700 mt-1">
+                    <h1 className="text-4xl font-bold text-gray-900">訂單管理</h1>
+                    <p className="text-lg text-gray-500 mt-1">
                         共 {orders.length} 筆訂單
                     </p>
                 </div>
-                <Button onClick={fetchOrders} variant="outline" size="sm" className="gap-2">
+                <button
+                    onClick={fetchOrders}
+                    className="inline-flex items-center gap-2 px-4 py-2.5 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-all text-gray-700 font-medium shadow-sm text-sm"
+                >
                     <RefreshCw className="h-4 w-4" />
                     刷新
-                </Button>
+                </button>
             </div>
 
             {orders.length === 0 ? (
-                <Card>
-                    <CardContent className="p-12 text-center text-muted-foreground">
-                        目前沒有訂單
-                    </CardContent>
-                </Card>
+                <div className="bg-white rounded-2xl shadow-apple border border-gray-100 p-16 text-center">
+                    <Package className="w-12 h-12 text-gray-300 mx-auto mb-4" />
+                    <p className="text-gray-500 text-lg">目前沒有訂單</p>
+                </div>
             ) : (
-                <div className="space-y-4">
+                <div className="space-y-6">
                     {orders.map((order) => {
-                        const statusInfo = STATUS_MAP[order.status] || STATUS_MAP.pending
+                        const statusConf = STATUS_CONFIG[order.status] || STATUS_CONFIG.pending
+                        const StatusIcon = statusConf.icon
                         const items: any[] = typeof order.items === 'string'
                             ? JSON.parse(order.items)
                             : (order.items || [])
 
                         return (
-                            <Card key={order.id} className="overflow-hidden hover:shadow-md transition-shadow">
-                                <CardContent className="p-6">
-                                    {/* Top Row: Customer + Total */}
-                                    <div className="flex flex-col sm:flex-row justify-between gap-4 mb-4">
-                                        <div>
-                                            <h3 className="text-lg font-semibold text-gray-900">{order.customer_name}</h3>
-                                            <p className="text-sm text-gray-700">{order.customer_email}</p>
-                                            <p className="text-sm text-gray-700">{order.customer_phone}</p>
-                                        </div>
-                                        <div className="text-right">
-                                            <p className="text-2xl font-bold text-primary">
-                                                ${Number(order.total).toFixed(2)}
-                                            </p>
-                                            <p className="text-xs text-muted-foreground mt-1">
-                                                {new Date(order.created_at).toLocaleString('zh-TW')}
-                                            </p>
-                                        </div>
+                            <div key={order.id} className="bg-white rounded-2xl p-6 shadow-apple border border-gray-100 hover:shadow-apple-lg transition-all duration-300">
+                                {/* Header: Customer + Total */}
+                                <div className="flex flex-col sm:flex-row justify-between gap-4 mb-6">
+                                    <div>
+                                        <h3 className="text-xl font-bold text-gray-900 mb-1">{order.customer_name}</h3>
+                                        <p className="text-sm text-gray-600">{order.customer_email}</p>
+                                        <p className="text-sm text-gray-600">{order.customer_phone}</p>
                                     </div>
-
-                                    {/* Delivery Address */}
-                                    <div className="mb-4 p-3 bg-secondary/30 rounded-md">
-                                        <p className="text-sm font-semibold text-gray-900 mb-1">取貨門市：</p>
-                                        <p className="text-sm text-gray-800">{order.delivery_address}</p>
+                                    <div className="text-right shrink-0">
+                                        <p className="text-3xl font-bold text-primary mb-1">
+                                            ${Number(order.total).toFixed(0)}
+                                        </p>
+                                        <p className="text-xs text-gray-400">
+                                            {new Date(order.created_at).toLocaleString('zh-TW')}
+                                        </p>
                                     </div>
+                                </div>
 
-                                    {/* Special Instructions */}
-                                    {order.special_instructions && (
-                                        <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-md">
-                                            <p className="text-sm font-semibold text-gray-900 mb-1">備註：</p>
-                                            <p className="text-sm text-gray-800">{order.special_instructions}</p>
-                                        </div>
-                                    )}
+                                {/* Delivery Address */}
+                                <div className="mb-4 p-4 bg-cream-100 rounded-xl">
+                                    <p className="text-sm font-semibold text-gray-900 mb-1">📍 取貨門市</p>
+                                    <p className="text-sm text-gray-700">{order.delivery_address}</p>
+                                </div>
 
-                                    {/* Status + Order ID */}
-                                    <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 mb-2">
-                                        <div className="flex items-center gap-2">
-                                            <span className="text-sm font-semibold">狀態：</span>
-                                            <select
-                                                value={order.status}
-                                                onChange={(e) => updateOrderStatus(order.id, e.target.value)}
-                                                className={`px-3 py-1.5 border rounded-md text-sm font-medium ${statusInfo.color}`}
-                                            >
-                                                <option value="pending">待處理</option>
-                                                <option value="processing">處理中</option>
-                                                <option value="completed">已完成</option>
-                                                <option value="cancelled">已取消</option>
-                                            </select>
-                                        </div>
-                                        <span className="text-xs text-muted-foreground font-mono">
-                                            #{order.id.split('-')[0].toUpperCase()}
-                                        </span>
+                                {/* Special Instructions */}
+                                {order.special_instructions && (
+                                    <div className="mb-4 p-4 bg-yellow-50 border border-yellow-200 rounded-xl">
+                                        <p className="text-sm font-semibold text-gray-900 mb-1">📝 備註</p>
+                                        <p className="text-sm text-gray-700">{order.special_instructions}</p>
                                     </div>
+                                )}
 
-                                    {/* Expandable Items */}
-                                    <details className="mt-4 group">
-                                        <summary className="cursor-pointer text-sm text-primary hover:underline flex items-center gap-1">
-                                            <ChevronDown className="h-4 w-4 transition-transform group-open:rotate-180" />
-                                            查看訂單明細 ({items.length} 項商品)
-                                        </summary>
-                                        <div className="mt-3 divide-y border rounded-md overflow-hidden">
-                                            {items.map((item: any, idx: number) => (
-                                                <div key={idx} className="p-3 flex justify-between items-center text-sm bg-background">
-                                                    <div>
-                                                        <span className="font-medium">{item.name}</span>
-                                                        <span className="text-muted-foreground ml-2">× {item.quantity}</span>
-                                                    </div>
-                                                    <span className="font-semibold">
-                                                        ${(Number(item.price) * item.quantity).toFixed(2)}
-                                                    </span>
+                                {/* Status + Order ID */}
+                                <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 mb-2">
+                                    <div className="flex items-center gap-3">
+                                        <span className="text-sm font-semibold text-gray-600">狀態：</span>
+                                        <select
+                                            value={order.status}
+                                            onChange={(e) => updateOrderStatus(order.id, e.target.value)}
+                                            className={`px-4 py-2 border-0 rounded-full text-sm font-bold ${statusConf.bg} ${statusConf.text} cursor-pointer focus:ring-2 focus:ring-primary/30`}
+                                        >
+                                            <option value="pending">⏳ 待處理</option>
+                                            <option value="processing">📦 處理中</option>
+                                            <option value="completed">✅ 已完成</option>
+                                            <option value="cancelled">❌ 已取消</option>
+                                        </select>
+                                    </div>
+                                    <span className="text-xs text-gray-400 font-mono">
+                                        #{order.id.split('-')[0].toUpperCase()}
+                                    </span>
+                                </div>
+
+                                {/* Expandable Items */}
+                                <details className="mt-4 group">
+                                    <summary className="cursor-pointer text-sm text-primary font-medium hover:text-primary/80 flex items-center gap-1 transition-colors">
+                                        <ChevronDown className="h-4 w-4 transition-transform group-open:rotate-180" />
+                                        查看訂單明細 ({items.length} 項商品)
+                                    </summary>
+                                    <div className="mt-3 divide-y border border-gray-100 rounded-xl overflow-hidden">
+                                        {items.map((item: any, idx: number) => (
+                                            <div key={idx} className="p-4 flex justify-between items-center text-sm bg-gray-50/50">
+                                                <div>
+                                                    <span className="font-medium text-gray-900">{item.name}</span>
+                                                    <span className="text-gray-500 ml-2">× {item.quantity}</span>
                                                 </div>
-                                            ))}
-                                        </div>
-                                    </details>
-                                </CardContent>
-                            </Card>
+                                                <span className="font-bold text-gray-900">
+                                                    ${(Number(item.price) * item.quantity).toFixed(0)}
+                                                </span>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </details>
+                            </div>
                         )
                     })}
                 </div>

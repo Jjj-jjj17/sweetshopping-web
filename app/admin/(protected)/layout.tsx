@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
-import { LayoutDashboard, Package, ShoppingCart, LogOut, Home, Loader2 } from 'lucide-react';
+import { Home, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
@@ -116,75 +116,88 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
     return (
         <div className="min-h-screen bg-gray-50 flex flex-col">
-            {/* Dark Top Navigation */}
-            <nav className="bg-gray-900 text-white sticky top-0 z-50">
-                <div className="container mx-auto px-4">
-                    <div className="flex items-center justify-between h-14">
+            {/* Frosted Glass Navigation */}
+            <nav className="sticky top-0 z-50 bg-white/90 backdrop-blur-xl border-b border-gray-200/80 shadow-sm">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <div className="flex items-center justify-between h-16">
                         <div className="flex items-center space-x-8">
-                            <Link href="/admin/dashboard" className="text-lg font-bold hover:text-blue-400 transition">
-                                SweetShop Admin
+                            <Link
+                                href="/admin/dashboard"
+                                className="flex items-center gap-2 text-xl font-bold text-gray-900 hover:text-primary transition-colors"
+                            >
+                                <span className="text-2xl">🍰</span>
+                                SweetShop
                             </Link>
-                            <div className="hidden md:flex space-x-6 text-sm">
+                            <div className="hidden md:flex space-x-1">
                                 <Link
                                     href="/admin/dashboard"
-                                    className={`flex items-center gap-1.5 transition ${isActive('/admin/dashboard') ? 'text-blue-400' : 'text-gray-300 hover:text-white'}`}
+                                    className={`px-4 py-2 rounded-lg font-medium text-sm transition-all duration-200 ${isActive('/admin/dashboard')
+                                        ? 'bg-primary/10 text-primary'
+                                        : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+                                        }`}
                                 >
-                                    <LayoutDashboard className="h-4 w-4" />
                                     儀表板
                                 </Link>
                                 <Link
                                     href="/admin/orders"
-                                    className={`flex items-center gap-1.5 transition ${isActivePrefix('/admin/orders') ? 'text-blue-400' : 'text-gray-300 hover:text-white'}`}
+                                    className={`px-4 py-2 rounded-lg font-medium text-sm transition-all duration-200 ${isActivePrefix('/admin/orders')
+                                        ? 'bg-primary/10 text-primary'
+                                        : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+                                        }`}
                                 >
-                                    <ShoppingCart className="h-4 w-4" />
                                     訂單管理
                                 </Link>
                                 <Link
                                     href="/admin/products"
-                                    className={`flex items-center gap-1.5 transition ${isActivePrefix('/admin/products') ? 'text-blue-400' : 'text-gray-300 hover:text-white'}`}
+                                    className={`px-4 py-2 rounded-lg font-medium text-sm transition-all duration-200 ${isActivePrefix('/admin/products')
+                                        ? 'bg-primary/10 text-primary'
+                                        : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+                                        }`}
                                 >
-                                    <Package className="h-4 w-4" />
                                     商品管理
                                 </Link>
                             </div>
                         </div>
                         <div className="flex items-center gap-3">
-                            <Link href="/" target="_blank" className="text-gray-400 hover:text-white transition" title="View Shop">
+                            <Link href="/" target="_blank" className="text-gray-400 hover:text-gray-600 transition p-2 hover:bg-gray-100 rounded-lg" title="View Shop">
                                 <Home className="h-4 w-4" />
                             </Link>
                             <button
                                 onClick={handleLogout}
-                                className="px-3 py-1.5 bg-red-600 rounded text-sm hover:bg-red-700 transition"
+                                className="px-4 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition-all text-sm font-medium shadow-sm"
                             >
                                 登出
                             </button>
                         </div>
                     </div>
                     {/* Mobile nav */}
-                    <div className="md:hidden flex gap-4 pb-2 text-sm overflow-x-auto">
+                    <div className="md:hidden flex gap-1 pb-3 overflow-x-auto">
                         <Link
                             href="/admin/dashboard"
-                            className={`flex items-center gap-1 whitespace-nowrap transition ${isActive('/admin/dashboard') ? 'text-blue-400' : 'text-gray-400 hover:text-white'}`}
+                            className={`px-3 py-1.5 rounded-lg text-sm font-medium whitespace-nowrap transition-all ${isActive('/admin/dashboard') ? 'bg-primary/10 text-primary' : 'text-gray-500 hover:bg-gray-100'
+                                }`}
                         >
-                            <LayoutDashboard className="h-3.5 w-3.5" /> 儀表板
+                            儀表板
                         </Link>
                         <Link
                             href="/admin/orders"
-                            className={`flex items-center gap-1 whitespace-nowrap transition ${isActivePrefix('/admin/orders') ? 'text-blue-400' : 'text-gray-400 hover:text-white'}`}
+                            className={`px-3 py-1.5 rounded-lg text-sm font-medium whitespace-nowrap transition-all ${isActivePrefix('/admin/orders') ? 'bg-primary/10 text-primary' : 'text-gray-500 hover:bg-gray-100'
+                                }`}
                         >
-                            <ShoppingCart className="h-3.5 w-3.5" /> 訂單
+                            訂單
                         </Link>
                         <Link
                             href="/admin/products"
-                            className={`flex items-center gap-1 whitespace-nowrap transition ${isActivePrefix('/admin/products') ? 'text-blue-400' : 'text-gray-400 hover:text-white'}`}
+                            className={`px-3 py-1.5 rounded-lg text-sm font-medium whitespace-nowrap transition-all ${isActivePrefix('/admin/products') ? 'bg-primary/10 text-primary' : 'text-gray-500 hover:bg-gray-100'
+                                }`}
                         >
-                            <Package className="h-3.5 w-3.5" /> 商品
+                            商品
                         </Link>
                     </div>
                 </div>
             </nav>
 
-            <main className="flex-1 p-4 md:p-6 max-w-7xl mx-auto w-full">
+            <main className="flex-1 p-4 md:p-8 max-w-7xl mx-auto w-full">
                 {children}
             </main>
         </div>
