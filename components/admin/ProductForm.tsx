@@ -5,9 +5,8 @@ import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { Product } from '@/types';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { ImageUpload } from './ImageUpload';
-import { Loader2, ArrowLeft, Save } from 'lucide-react';
+import { Loader2, Save } from 'lucide-react';
 import Link from 'next/link';
 
 interface ProductFormProps {
@@ -43,7 +42,6 @@ export function ProductForm({ initialData }: ProductFormProps) {
         };
 
         if (initialData?.id) {
-            // Update
             const { error } = await supabase
                 .from('products')
                 .update(productPayload)
@@ -55,7 +53,6 @@ export function ProductForm({ initialData }: ProductFormProps) {
                 return;
             }
         } else {
-            // Insert
             const { error } = await supabase
                 .from('products')
                 .insert([productPayload]);
@@ -71,52 +68,60 @@ export function ProductForm({ initialData }: ProductFormProps) {
         router.refresh();
     };
 
+    const inputStyle = { backgroundColor: '#FFFFFF', color: '#1D1D1F', borderColor: 'rgba(0,0,0,0.12)' };
+    const labelStyle = { color: '#1D1D1F' };
+    const cardStyle = { backgroundColor: '#FFFFFF', color: '#1D1D1F' };
+
     return (
         <form onSubmit={handleSubmit} className="space-y-8 max-w-4xl mx-auto">
             <div className="flex items-center justify-between">
                 <div className="flex items-center gap-4">
-                    <Link href="/admin/products">
-                        <Button variant="outline" size="icon" type="button">
-                            <ArrowLeft className="h-4 w-4" />
-                        </Button>
+                    <Link
+                        href="/admin/products"
+                        className="inline-flex items-center gap-1.5 px-4 py-2 bg-[#F5F5F7] hover:bg-[#EBEBED] text-[#1D1D1F] text-[15px] font-medium rounded-lg transition-colors duration-150"
+                    >
+                        ← 返回
                     </Link>
-                    <h1 className="text-2xl font-bold tracking-tight">
-                        {initialData ? 'Edit Product' : 'Create Product'}
+                    <h1 style={{ color: '#1D1D1F', fontSize: '24px', fontWeight: 600 }}>
+                        {initialData ? '編輯商品' : '新增商品'}
                     </h1>
                 </div>
-                <Button type="submit" disabled={saving}>
+                <Button type="submit" disabled={saving} className="bg-[#FF6B6B] hover:bg-[#E85555] text-white px-5 py-2.5 rounded-lg font-semibold">
                     {saving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
-                    {saving ? 'Saving...' : 'Save Product'}
+                    {saving ? '儲存中...' : '儲存商品'}
                 </Button>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                 {/* Main Content Area */}
                 <div className="md:col-span-2 space-y-6">
-                    <div className="space-y-4 p-6 bg-card rounded-lg border shadow-sm">
+                    <div className="space-y-4 p-6 rounded-xl border border-black/[0.04] shadow-card" style={cardStyle}>
                         <div>
-                            <label className="text-sm font-medium mb-1.5 block">Product Name *</label>
-                            <Input
+                            <label className="text-[13px] font-semibold mb-1.5 block tracking-wide" style={labelStyle}>商品名稱 *</label>
+                            <input
                                 required
-                                placeholder="E.g., Signature Lemon Tart"
+                                placeholder="例如：招牌檸檬塔"
                                 value={formData.name}
                                 onChange={e => setFormData({ ...formData, name: e.target.value })}
+                                className="w-full px-3.5 py-2.5 rounded-lg text-[15px] border focus:ring-2 focus:ring-[#FF6B6B]/15 focus:border-[#FF6B6B] outline-none transition-all"
+                                style={inputStyle}
                             />
                         </div>
                         <div>
-                            <label className="text-sm font-medium mb-1.5 block">Description</label>
+                            <label className="text-[13px] font-semibold mb-1.5 block tracking-wide" style={labelStyle}>商品描述 *</label>
                             <textarea
-                                className="flex min-h-[120px] w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 leading-relaxed"
-                                placeholder="Describe the product..."
+                                className="w-full min-h-[120px] px-3.5 py-2.5 rounded-lg text-[15px] border focus:ring-2 focus:ring-[#FF6B6B]/15 focus:border-[#FF6B6B] outline-none transition-all leading-relaxed"
+                                placeholder="描述商品特色..."
                                 value={formData.description}
                                 onChange={e => setFormData({ ...formData, description: e.target.value })}
                                 required
+                                style={inputStyle}
                             />
                         </div>
                     </div>
 
-                    <div className="space-y-4 p-6 bg-card rounded-lg border shadow-sm">
-                        <h3 className="text-lg font-semibold leading-none tracking-tight">Images</h3>
+                    <div className="space-y-4 p-6 rounded-xl border border-black/[0.04] shadow-card" style={cardStyle}>
+                        <h3 className="text-[17px] font-semibold" style={labelStyle}>商品圖片</h3>
                         <ImageUpload
                             images={formData.images}
                             onChange={(images) => setFormData({ ...formData, images })}
@@ -124,45 +129,49 @@ export function ProductForm({ initialData }: ProductFormProps) {
                     </div>
                 </div>
 
-                {/* Sidebar Setup */}
+                {/* Sidebar */}
                 <div className="space-y-6">
-                    <div className="space-y-4 p-6 bg-card rounded-lg border shadow-sm">
-                        <h3 className="text-lg font-semibold leading-none tracking-tight">Pricing & Inventory</h3>
+                    <div className="space-y-4 p-6 rounded-xl border border-black/[0.04] shadow-card" style={cardStyle}>
+                        <h3 className="text-[17px] font-semibold" style={labelStyle}>價格與庫存</h3>
                         <div>
-                            <label className="text-sm font-medium mb-1.5 block">Price *</label>
+                            <label className="text-[13px] font-semibold mb-1.5 block tracking-wide" style={labelStyle}>價格 *</label>
                             <div className="relative">
-                                <span className="absolute left-3 top-2.5 text-muted-foreground">$</span>
-                                <Input
+                                <span className="absolute left-3 top-2.5" style={{ color: '#6E6E73' }}>$</span>
+                                <input
                                     required
                                     type="number"
                                     min="0"
                                     step="0.01"
-                                    className="pl-7"
+                                    className="w-full pl-7 px-3.5 py-2.5 rounded-lg text-[15px] border focus:ring-2 focus:ring-[#FF6B6B]/15 focus:border-[#FF6B6B] outline-none transition-all"
                                     value={formData.price}
                                     onChange={e => setFormData({ ...formData, price: Number(e.target.value) })}
+                                    style={inputStyle}
                                 />
                             </div>
                         </div>
                         <div>
-                            <label className="text-sm font-medium mb-1.5 block">Stock Quantity *</label>
-                            <Input
+                            <label className="text-[13px] font-semibold mb-1.5 block tracking-wide" style={labelStyle}>庫存數量 *</label>
+                            <input
                                 required
                                 type="number"
                                 min="0"
+                                className="w-full px-3.5 py-2.5 rounded-lg text-[15px] border focus:ring-2 focus:ring-[#FF6B6B]/15 focus:border-[#FF6B6B] outline-none transition-all"
                                 value={formData.stock}
                                 onChange={e => setFormData({ ...formData, stock: Number(e.target.value) })}
+                                style={inputStyle}
                             />
                         </div>
                     </div>
 
-                    <div className="space-y-4 p-6 bg-card rounded-lg border shadow-sm">
-                        <h3 className="text-lg font-semibold leading-none tracking-tight">Organization</h3>
+                    <div className="space-y-4 p-6 rounded-xl border border-black/[0.04] shadow-card" style={cardStyle}>
+                        <h3 className="text-[17px] font-semibold" style={labelStyle}>分類設定</h3>
                         <div>
-                            <label className="text-sm font-medium mb-1.5 block">Category</label>
+                            <label className="text-[13px] font-semibold mb-1.5 block tracking-wide" style={labelStyle}>商品分類</label>
                             <select
-                                className="flex h-10 w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+                                className="w-full px-3.5 py-2.5 rounded-lg text-[15px] border focus:ring-2 focus:ring-[#FF6B6B]/15 focus:border-[#FF6B6B] outline-none transition-all"
                                 value={formData.category}
                                 onChange={e => setFormData({ ...formData, category: e.target.value })}
+                                style={inputStyle}
                             >
                                 <option value="Dessert">Dessert</option>
                                 <option value="Cake">Cake</option>
@@ -174,14 +183,14 @@ export function ProductForm({ initialData }: ProductFormProps) {
                         </div>
 
                         <div className="pt-2">
-                            <label className="flex items-center gap-2 cursor-pointer p-2 rounded-md hover:bg-secondary transition-colors">
+                            <label className="flex items-center gap-2 cursor-pointer p-2 rounded-lg hover:bg-[#F5F5F7] transition-colors">
                                 <input
                                     type="checkbox"
-                                    className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
+                                    className="h-4 w-4 rounded border-gray-300 text-[#FF6B6B] focus:ring-[#FF6B6B]"
                                     checked={formData.is_available}
                                     onChange={e => setFormData({ ...formData, is_available: e.target.checked })}
                                 />
-                                <span className="text-sm font-medium">Active (Visible in shop)</span>
+                                <span className="text-[15px] font-medium" style={labelStyle}>上架中（顯示於商店）</span>
                             </label>
                         </div>
                     </div>

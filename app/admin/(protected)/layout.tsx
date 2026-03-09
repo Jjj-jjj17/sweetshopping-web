@@ -17,11 +17,22 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
         const checkAdmin = async () => {
             try {
-                const { data: { session } } = await supabase.auth.getSession();
+                // Wait for session to stabilize after OAuth redirect
+                await new Promise(resolve => setTimeout(resolve, 300));
+
+                let { data: { session } } = await supabase.auth.getSession();
 
                 console.log('=== ADMIN LAYOUT CHECK ===');
                 console.log('Session:', !!session);
                 console.log('Email:', session?.user?.email);
+
+                if (!session) {
+                    // Retry once — give OAuth callback time to write cookie
+                    await new Promise(resolve => setTimeout(resolve, 500));
+                    const { data: { session: retrySession } } = await supabase.auth.getSession();
+                    session = retrySession;
+                    console.log('Retry session:', !!session);
+                }
 
                 if (!session) {
                     if (mounted) {
