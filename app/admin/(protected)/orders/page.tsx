@@ -104,16 +104,15 @@ export default function AdminOrdersPage() {
         <div className="py-2">
             <Link
                 href="/admin/dashboard"
-                className="inline-flex items-center gap-2 px-4 py-2 bg-surface-base hover:bg-[#EBEBED] rounded-lg transition-colors text-ink-primary text-[15px] font-medium mb-8"
+                className="inline-flex items-center gap-1.5 px-4 py-2 bg-[#F5F5F7] hover:bg-[#EBEBED] text-[#1D1D1F] text-[15px] font-medium rounded-lg transition-colors duration-150 mb-8"
             >
-                <ArrowLeft className="w-4 h-4" />
-                返回儀表板
+                ← 返回儀表板
             </Link>
 
             <div className="flex justify-between items-center mb-8">
                 <div>
-                    <h1 className="text-[32px] font-bold tracking-[-0.02em] leading-[1.2] text-ink-primary">訂單管理</h1>
-                    <p className="text-[17px] text-ink-tertiary mt-1">
+                    <h1 style={{ color: '#1D1D1F', fontSize: '32px', fontWeight: 700, letterSpacing: '-0.02em', lineHeight: 1.2 }}>訂單管理</h1>
+                    <p style={{ color: '#6E6E73', fontSize: '17px', marginTop: '4px' }}>
                         共 {orders.length} 筆訂單
                     </p>
                 </div>

@@ -2,19 +2,21 @@
 
 import { ProductForm } from '@/components/admin/ProductForm';
 import Link from 'next/link';
-import { ArrowLeft } from 'lucide-react';
 
 export default function NewProductPage() {
     return (
-        <div className="py-6">
+        <div className="py-2">
             <Link
                 href="/admin/products"
-                className="inline-flex items-center gap-2 mb-6 px-4 py-2 bg-secondary text-gray-800 rounded-lg hover:bg-secondary/80 transition text-sm font-medium"
+                className="inline-flex items-center gap-1.5 px-4 py-2 bg-[#F5F5F7] hover:bg-[#EBEBED] text-[#1D1D1F] text-[15px] font-medium rounded-lg transition-colors duration-150 mb-8"
             >
-                <ArrowLeft className="w-4 h-4" />
-                返回商品列表
+                ← 返回商品列表
             </Link>
-            <ProductForm />
+            <h1 style={{ color: '#1D1D1F', fontSize: '32px', fontWeight: 700, letterSpacing: '-0.02em', lineHeight: 1.2 }}>新增商品</h1>
+            <p style={{ color: '#6E6E73', fontSize: '15px', marginTop: '4px' }}>上傳新商品到商店</p>
+            <div className="mt-8">
+                <ProductForm />
+            </div>
         </div>
     );
 }

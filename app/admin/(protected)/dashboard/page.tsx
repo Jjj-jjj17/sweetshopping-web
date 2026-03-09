@@ -99,8 +99,8 @@ export default function DashboardPage() {
     <div className="py-2">
       {/* Header */}
       <div className="mb-10">
-        <h1 className="text-[32px] font-bold tracking-[-0.02em] leading-[1.2] text-ink-primary mb-1">儀表板</h1>
-        <p className="text-[17px] leading-[1.5] text-ink-tertiary">歡迎回來，這是今天的營運概況</p>
+        <h1 style={{ color: '#1D1D1F', fontSize: '32px', fontWeight: 700, letterSpacing: '-0.02em', lineHeight: 1.2 }}>儀表板</h1>
+        <p style={{ color: '#6E6E73', fontSize: '17px', marginTop: '4px' }}>歡迎回來，這是今天的營運概況</p>
       </div>
 
       {/* Low Stock Alert */}
