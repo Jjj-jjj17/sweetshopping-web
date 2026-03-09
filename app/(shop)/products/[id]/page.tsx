@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, use } from 'react';
 import { supabase } from '@/lib/supabase';
 import { Product } from '@/types';
 import { useCart } from '@/context/CartContext';
@@ -10,8 +10,8 @@ import { Loader2, ArrowLeft, ShoppingCart, Minus, Plus } from 'lucide-react';
 import { toast } from 'sonner';
 import Link from 'next/link';
 
-export default function ProductDetailPage({ params }: { params: { id: string } }) {
-    const { id } = params;
+export default function ProductDetailPage({ params }: { params: Promise<{ id: string }> }) {
+    const { id } = use(params);
     const { addToCart } = useCart();
 
     const [product, setProduct] = useState<Product | null>(null);

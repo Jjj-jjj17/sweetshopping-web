@@ -115,43 +115,43 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     const isActivePrefix = (prefix: string) => pathname?.startsWith(prefix);
 
     return (
-        <div className="min-h-screen bg-gray-50 flex flex-col">
-            {/* Frosted Glass Navigation */}
-            <nav className="sticky top-0 z-50 bg-white/90 backdrop-blur-xl border-b border-gray-200/80 shadow-sm">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="flex items-center justify-between h-16">
+        <div className="min-h-screen bg-surface-base flex flex-col">
+            {/* Nav bar: bg-white/90 backdrop-blur-xl border-b border-black/[0.06] h-[52px] px-6 */}
+            <nav className="sticky top-0 z-50 bg-white/90 backdrop-blur-xl border-b border-black/[0.06] shadow-nav">
+                <div className="max-w-7xl mx-auto px-6">
+                    <div className="flex items-center justify-between h-[52px]">
                         <div className="flex items-center space-x-8">
                             <Link
                                 href="/admin/dashboard"
-                                className="flex items-center gap-2 text-xl font-bold text-gray-900 hover:text-primary transition-colors"
+                                className="flex items-center gap-2 text-[20px] font-semibold text-ink-primary hover:text-brand-500 transition-colors leading-[1.3] tracking-[-0.01em]"
                             >
-                                <span className="text-2xl">🍰</span>
+                                <span className="text-xl">🍰</span>
                                 SweetShop
                             </Link>
                             <div className="hidden md:flex space-x-1">
                                 <Link
                                     href="/admin/dashboard"
-                                    className={`px-4 py-2 rounded-lg font-medium text-sm transition-all duration-200 ${isActive('/admin/dashboard')
-                                        ? 'bg-primary/10 text-primary'
-                                        : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+                                    className={`px-4 py-1.5 rounded-lg text-[15px] transition-all duration-150 ${isActive('/admin/dashboard')
+                                        ? 'text-ink-primary font-semibold'
+                                        : 'text-ink-tertiary hover:text-ink-primary'
                                         }`}
                                 >
                                     儀表板
                                 </Link>
                                 <Link
                                     href="/admin/orders"
-                                    className={`px-4 py-2 rounded-lg font-medium text-sm transition-all duration-200 ${isActivePrefix('/admin/orders')
-                                        ? 'bg-primary/10 text-primary'
-                                        : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+                                    className={`px-4 py-1.5 rounded-lg text-[15px] transition-all duration-150 ${isActivePrefix('/admin/orders')
+                                        ? 'text-ink-primary font-semibold'
+                                        : 'text-ink-tertiary hover:text-ink-primary'
                                         }`}
                                 >
                                     訂單管理
                                 </Link>
                                 <Link
                                     href="/admin/products"
-                                    className={`px-4 py-2 rounded-lg font-medium text-sm transition-all duration-200 ${isActivePrefix('/admin/products')
-                                        ? 'bg-primary/10 text-primary'
-                                        : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+                                    className={`px-4 py-1.5 rounded-lg text-[15px] transition-all duration-150 ${isActivePrefix('/admin/products')
+                                        ? 'text-ink-primary font-semibold'
+                                        : 'text-ink-tertiary hover:text-ink-primary'
                                         }`}
                                 >
                                     商品管理
@@ -159,36 +159,36 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                             </div>
                         </div>
                         <div className="flex items-center gap-3">
-                            <Link href="/" target="_blank" className="text-gray-400 hover:text-gray-600 transition p-2 hover:bg-gray-100 rounded-lg" title="View Shop">
+                            <Link href="/" target="_blank" className="text-ink-disabled hover:text-ink-secondary transition p-2 hover:bg-surface-base rounded-lg" title="View Shop">
                                 <Home className="h-4 w-4" />
                             </Link>
                             <button
                                 onClick={handleLogout}
-                                className="px-4 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition-all text-sm font-medium shadow-sm"
+                                className="px-5 py-2 bg-ink-primary text-ink-inverse rounded-lg hover:bg-ink-secondary transition-colors text-[15px] font-semibold"
                             >
                                 登出
                             </button>
                         </div>
                     </div>
                     {/* Mobile nav */}
-                    <div className="md:hidden flex gap-1 pb-3 overflow-x-auto">
+                    <div className="md:hidden flex gap-1 pb-2.5 overflow-x-auto">
                         <Link
                             href="/admin/dashboard"
-                            className={`px-3 py-1.5 rounded-lg text-sm font-medium whitespace-nowrap transition-all ${isActive('/admin/dashboard') ? 'bg-primary/10 text-primary' : 'text-gray-500 hover:bg-gray-100'
+                            className={`px-3 py-1 rounded-lg text-[13px] font-medium whitespace-nowrap transition-all ${isActive('/admin/dashboard') ? 'text-ink-primary font-semibold' : 'text-ink-tertiary'
                                 }`}
                         >
                             儀表板
                         </Link>
                         <Link
                             href="/admin/orders"
-                            className={`px-3 py-1.5 rounded-lg text-sm font-medium whitespace-nowrap transition-all ${isActivePrefix('/admin/orders') ? 'bg-primary/10 text-primary' : 'text-gray-500 hover:bg-gray-100'
+                            className={`px-3 py-1 rounded-lg text-[13px] font-medium whitespace-nowrap transition-all ${isActivePrefix('/admin/orders') ? 'text-ink-primary font-semibold' : 'text-ink-tertiary'
                                 }`}
                         >
                             訂單
                         </Link>
                         <Link
                             href="/admin/products"
-                            className={`px-3 py-1.5 rounded-lg text-sm font-medium whitespace-nowrap transition-all ${isActivePrefix('/admin/products') ? 'bg-primary/10 text-primary' : 'text-gray-500 hover:bg-gray-100'
+                            className={`px-3 py-1 rounded-lg text-[13px] font-medium whitespace-nowrap transition-all ${isActivePrefix('/admin/products') ? 'text-ink-primary font-semibold' : 'text-ink-tertiary'
                                 }`}
                         >
                             商品
@@ -203,3 +203,4 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         </div>
     );
 }
+
