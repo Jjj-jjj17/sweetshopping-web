@@ -2,8 +2,9 @@
 
 import { supabase } from '@/lib/supabase'
 import { useEffect, useState } from 'react'
-import { Loader2, RefreshCw, ChevronDown, ArrowLeft, Clock, Package, CheckCircle, XCircle } from 'lucide-react'
+import { Loader2, RefreshCw, ChevronDown, ArrowLeft, Clock, Package, CheckCircle, XCircle, Download } from 'lucide-react'
 import Link from 'next/link'
+import { exportSalesReport } from '@/lib/export-sales'
 
 interface Order {
     id: string
@@ -116,13 +117,22 @@ export default function AdminOrdersPage() {
                         共 {orders.length} 筆訂單
                     </p>
                 </div>
-                <button
-                    onClick={fetchOrders}
-                    className="inline-flex items-center gap-2 px-5 py-2.5 bg-surface-base hover:bg-[#EBEBED] rounded-lg transition-colors text-ink-primary text-[15px] font-medium"
-                >
-                    <RefreshCw className="h-4 w-4" />
-                    刷新
-                </button>
+                <div className="flex items-center gap-3">
+                    <button
+                        onClick={() => exportSalesReport(orders)}
+                        className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#34C759] hover:bg-[#2DB84E] rounded-lg transition-colors text-white text-[15px] font-semibold"
+                    >
+                        <Download className="h-4 w-4" />
+                        匯出報表
+                    </button>
+                    <button
+                        onClick={fetchOrders}
+                        className="inline-flex items-center gap-2 px-5 py-2.5 bg-surface-base hover:bg-[#EBEBED] rounded-lg transition-colors text-ink-primary text-[15px] font-medium"
+                    >
+                        <RefreshCw className="h-4 w-4" />
+                        刷新
+                    </button>
+                </div>
             </div>
 
             {orders.length === 0 ? (
