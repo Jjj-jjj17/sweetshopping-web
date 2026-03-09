@@ -1,4 +1,4 @@
-import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
+import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { NextResponse } from 'next/server'
 
@@ -7,15 +7,33 @@ export async function GET(request: Request) {
     const code = requestUrl.searchParams.get('code')
 
     if (code) {
-        const supabase = createRouteHandlerClient({ cookies })
+        const cookieStore = await cookies()
+
+        const supabase = createServerClient(
+            process.env.NEXT_PUBLIC_SUPABASE_URL!,
+            process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+            {
+                cookies: {
+                    getAll() { return cookieStore.getAll() },
+                    setAll(cookiesToSet) {
+                        cookiesToSet.forEach(({ name, value, options }) =>
+                            cookieStore.set(name, value, options)
+                        )
+                    },
+                },
+            }
+        )
+
         const { data: { session } } = await supabase.auth.exchangeCodeForSession(code)
 
         if (session?.user?.email) {
-            const adminEmails = (process.env.NEXT_PUBLIC_ADMIN_EMAIL || '')
-                .split(',')
-                .map(e => e.trim().toLowerCase())
+            const { data: adminUser } = await supabase
+                .from('admin_users')
+                .select('email')
+                .eq('email', session.user.email)
+                .single()
 
-            if (adminEmails.includes(session.user.email.toLowerCase())) {
+            if (adminUser) {
                 return NextResponse.redirect(new URL('/admin/dashboard', requestUrl.origin))
             }
         }
