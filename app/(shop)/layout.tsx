@@ -69,39 +69,13 @@ function ShopHeader() {
 }
 
 function ShopFooter() {
-    const { t } = useLanguage();
-
     return (
-        <footer className="w-full bg-chocolate-700 text-cream-200 py-14 mt-20">
-            <div className="container mx-auto px-4 grid grid-cols-1 md:grid-cols-3 gap-10">
-                <div>
-                    <Link href="/" className="flex items-center gap-2 font-bold text-xl mb-4">
-                        <Cookie className="h-5 w-5 text-primary" />
-                        <span className="text-cream-100">SweetShop</span>
-                    </Link>
-                    <p className="text-sm text-cream-300/70 max-w-xs leading-relaxed">
-                        {t('footer.description')}
-                    </p>
-                </div>
-                <div>
-                    <h3 className="font-semibold mb-4 text-cream-100">{t('footer.storeHours')}</h3>
-                    <ul className="text-sm text-cream-300/70 space-y-2">
-                        <li>{t('footer.weekdays')}</li>
-                        <li>{t('footer.saturday')}</li>
-                        <li>{t('footer.sunday')}</li>
-                    </ul>
-                </div>
-                <div>
-                    <h3 className="font-semibold mb-4 text-cream-100">{t('footer.links')}</h3>
-                    <ul className="text-sm text-cream-300/70 space-y-2">
-                        <li><Link href="#" className="hover:text-cream-100 transition-colors">{t('footer.privacy')}</Link></li>
-                        <li><Link href="#" className="hover:text-cream-100 transition-colors">{t('footer.terms')}</Link></li>
-                        <li><Link href="/admin/login" className="text-cream-300/30 hover:text-cream-300/50 transition-colors">Admin</Link></li>
-                    </ul>
-                </div>
-            </div>
-            <div className="container mx-auto px-4 mt-10 pt-8 border-t border-cream-300/10 text-center text-sm text-cream-300/50">
-                &copy; {new Date().getFullYear()} SweetShop. All rights reserved.
+        <footer className="bg-white border-t border-black/[0.06] py-8 mt-auto">
+            <div className="max-w-7xl mx-auto px-6 flex items-center justify-between">
+                <p className="text-[13px] text-[#6E6E73]">&copy; {new Date().getFullYear()} SweetShop. All rights reserved.</p>
+                <a href="/admin/login" className="text-[13px] text-[#6E6E73] hover:text-[#1D1D1F] transition-colors">
+                    Admin
+                </a>
             </div>
         </footer>
     );

@@ -126,6 +126,8 @@
   body {
     @apply bg-background text-foreground antialiased;
     font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', 'Noto Sans TC', sans-serif;
+    background-color: #F5F5F7;
+    color: #1D1D1F;
   }
 }
 

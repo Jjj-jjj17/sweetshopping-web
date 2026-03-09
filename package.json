@@ -12,6 +12,7 @@
     "deploy:check": "npm run lint && npx vitest run && npm run db:verify"
   },
   "dependencies": {
+    "@supabase/auth-helpers-nextjs": "^0.15.0",
     "@supabase/ssr": "^0.5.2",
     "@supabase/supabase-js": "^2.93.3",
     "browser-image-compression": "^2.0.2",
