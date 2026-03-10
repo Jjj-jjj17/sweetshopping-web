@@ -27,13 +27,11 @@ export async function GET(request: Request) {
         const { data: { session } } = await supabase.auth.exchangeCodeForSession(code)
 
         if (session?.user?.email) {
-            const { data: adminUser } = await supabase
-                .from('admin_users')
-                .select('email')
-                .eq('email', session.user.email)
-                .single()
+            const adminEmails = (process.env.NEXT_PUBLIC_ADMIN_EMAIL || process.env.ADMIN_EMAIL || '')
+                .split(',')
+                .map(e => e.trim())
 
-            if (adminUser) {
+            if (adminEmails.includes(session.user.email)) {
                 return NextResponse.redirect(new URL('/admin/dashboard', requestUrl.origin))
             }
         }
