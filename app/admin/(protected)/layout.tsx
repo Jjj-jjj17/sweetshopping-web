@@ -2,95 +2,55 @@
 
 import React, { useEffect, useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
-import { supabase } from '@/lib/supabase';
-import { Home, Loader2 } from 'lucide-react';
+import { createBrowserClient } from '@supabase/ssr';
+import { Home } from 'lucide-react';
 import Link from 'next/link';
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
     const pathname = usePathname();
     const router = useRouter();
-    const [loading, setLoading] = useState(true);
-    const [isAuthenticated, setIsAuthenticated] = useState(false);
+    const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
+
+    const supabase = createBrowserClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    );
 
     useEffect(() => {
-        let mounted = true;
+        checkAdmin();
 
-        const checkAdmin = async () => {
-            try {
-                const { data: { session } } = await supabase.auth.getSession();
-
-                if (!session) {
-                    // No session yet — wait for onAuthStateChange to fire (OAuth flow)
-                    return;
-                }
-
-                const userEmail = session.user.email?.toLowerCase() || '';
-                const adminEmails = (process.env.NEXT_PUBLIC_ADMIN_EMAIL || '')
-                    .split(',')
-                    .map((e: string) => e.trim().toLowerCase());
-
-                if (adminEmails.includes(userEmail)) {
-                    if (mounted) {
-                        setIsAuthenticated(true);
-                        setLoading(false);
-                    }
-                } else {
-                    if (mounted) {
-                        setLoading(false);
-                        router.push('/admin/login');
-                    }
-                }
-            } catch (error) {
-                console.error('Admin check error:', error);
-                if (mounted) {
-                    setLoading(false);
-                    router.push('/admin/login');
-                }
-            }
-        };
-
-        // Listen for auth state changes (handles OAuth redirect completion)
         const { data: { subscription } } = supabase.auth.onAuthStateChange(
-            async (event: string, session: any) => {
-                if (!mounted) return;
-
+            async (event, session) => {
                 if (event === 'SIGNED_IN' && session?.user?.email) {
-                    const userEmail = session.user.email.toLowerCase();
                     const adminEmails = (process.env.NEXT_PUBLIC_ADMIN_EMAIL || '')
-                        .split(',')
-                        .map((e: string) => e.trim().toLowerCase());
-
-                    if (adminEmails.includes(userEmail)) {
-                        setIsAuthenticated(true);
-                        setLoading(false);
+                        .split(',').map(e => e.trim());
+                    if (adminEmails.includes(session.user.email)) {
+                        setIsAdmin(true);
                     } else {
-                        setLoading(false);
                         router.push('/admin/login');
                     }
                 } else if (event === 'SIGNED_OUT') {
-                    setIsAuthenticated(false);
                     router.push('/admin/login');
                 }
             }
         );
 
-        // Initial check for existing session
-        checkAdmin();
-
-        // Fallback: if neither checkAdmin nor onAuthStateChange resolves within 3s, redirect
-        const timeout = setTimeout(() => {
-            if (mounted && loading) {
-                setLoading(false);
-                router.push('/admin/login');
-            }
-        }, 3000);
-
-        return () => {
-            mounted = false;
-            subscription.unsubscribe();
-            clearTimeout(timeout);
-        };
+        return () => subscription.unsubscribe();
     }, []);
+
+    async function checkAdmin() {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) return; // Wait for onAuthStateChange
+
+        const adminEmails = (process.env.NEXT_PUBLIC_ADMIN_EMAIL || '')
+            .split(',').map(e => e.trim());
+
+        if (adminEmails.includes(session.user.email || '')) {
+            setIsAdmin(true);
+        } else {
+            router.push('/admin/login');
+        }
+    }
 
     const handleLogout = async () => {
         await supabase.auth.signOut();
@@ -98,34 +58,30 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         router.refresh();
     };
 
-    if (loading) {
+    if (isAdmin === null) {
         return (
-            <div className="min-h-screen flex items-center justify-center bg-gray-50">
-                <div className="flex flex-col items-center gap-3">
-                    <Loader2 className="animate-spin h-8 w-8 text-primary" />
-                    <p className="text-gray-700 text-sm">驗證中...</p>
-                </div>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh', backgroundColor: '#F5F5F7', color: '#1D1D1F' }}>
+                Loading...
             </div>
         );
     }
 
-    if (!isAuthenticated) {
-        return null;
-    }
+    if (!isAdmin) return null;
 
     const isActive = (path: string) => pathname === path;
     const isActivePrefix = (prefix: string) => pathname?.startsWith(prefix);
 
     return (
-        <div className="min-h-screen bg-surface-base flex flex-col">
-            {/* Nav bar: bg-white/90 backdrop-blur-xl border-b border-black/[0.06] h-[52px] px-6 */}
-            <nav className="sticky top-0 z-50 bg-white/90 backdrop-blur-xl border-b border-black/[0.06] shadow-nav">
+        <div style={{ minHeight: '100vh', backgroundColor: '#F5F5F7' }} className="flex flex-col">
+            {/* Nav bar */}
+            <nav className="sticky top-0 z-50" style={{ backgroundColor: 'rgba(255,255,255,0.9)', backdropFilter: 'blur(20px)', borderBottom: '1px solid rgba(0,0,0,0.06)' }}>
                 <div className="max-w-7xl mx-auto px-6">
                     <div className="flex items-center justify-between h-[52px]">
                         <div className="flex items-center space-x-8">
                             <Link
                                 href="/admin/dashboard"
-                                className="flex items-center gap-2 text-[20px] font-semibold text-ink-primary hover:text-brand-500 transition-colors leading-[1.3] tracking-[-0.01em]"
+                                className="flex items-center gap-2 text-[20px] font-semibold transition-colors leading-[1.3] tracking-[-0.01em]"
+                                style={{ color: '#1D1D1F' }}
                             >
                                 <span className="text-xl">🍰</span>
                                 SweetShop
@@ -133,40 +89,41 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                             <div className="hidden md:flex space-x-1">
                                 <Link
                                     href="/admin/dashboard"
-                                    className={`px-4 py-1.5 rounded-lg text-[15px] transition-all duration-150 ${isActive('/admin/dashboard')
-                                        ? 'text-ink-primary font-semibold'
-                                        : 'text-ink-tertiary hover:text-ink-primary'
-                                        }`}
+                                    className="px-4 py-1.5 rounded-lg text-[15px] transition-all duration-150"
+                                    style={{ color: isActive('/admin/dashboard') ? '#1D1D1F' : '#6E6E73', fontWeight: isActive('/admin/dashboard') ? 600 : 400 }}
                                 >
                                     儀表板
                                 </Link>
                                 <Link
                                     href="/admin/orders"
-                                    className={`px-4 py-1.5 rounded-lg text-[15px] transition-all duration-150 ${isActivePrefix('/admin/orders')
-                                        ? 'text-ink-primary font-semibold'
-                                        : 'text-ink-tertiary hover:text-ink-primary'
-                                        }`}
+                                    className="px-4 py-1.5 rounded-lg text-[15px] transition-all duration-150"
+                                    style={{ color: isActivePrefix('/admin/orders') ? '#1D1D1F' : '#6E6E73', fontWeight: isActivePrefix('/admin/orders') ? 600 : 400 }}
                                 >
                                     訂單管理
                                 </Link>
                                 <Link
                                     href="/admin/products"
-                                    className={`px-4 py-1.5 rounded-lg text-[15px] transition-all duration-150 ${isActivePrefix('/admin/products')
-                                        ? 'text-ink-primary font-semibold'
-                                        : 'text-ink-tertiary hover:text-ink-primary'
-                                        }`}
+                                    className="px-4 py-1.5 rounded-lg text-[15px] transition-all duration-150"
+                                    style={{ color: isActivePrefix('/admin/products') ? '#1D1D1F' : '#6E6E73', fontWeight: isActivePrefix('/admin/products') ? 600 : 400 }}
                                 >
                                     商品管理
                                 </Link>
                             </div>
                         </div>
                         <div className="flex items-center gap-3">
-                            <Link href="/" target="_blank" className="text-ink-disabled hover:text-ink-secondary transition p-2 hover:bg-surface-base rounded-lg" title="View Shop">
+                            <Link
+                                href="/"
+                                target="_blank"
+                                className="p-2 rounded-lg transition-colors"
+                                style={{ color: '#6E6E73' }}
+                                title="View Shop"
+                            >
                                 <Home className="h-4 w-4" />
                             </Link>
                             <button
                                 onClick={handleLogout}
-                                className="px-5 py-2 bg-ink-primary text-ink-inverse rounded-lg hover:bg-ink-secondary transition-colors text-[15px] font-semibold"
+                                className="px-5 py-2 rounded-lg text-[15px] font-semibold transition-colors"
+                                style={{ backgroundColor: '#1D1D1F', color: '#FFFFFF' }}
                             >
                                 登出
                             </button>
@@ -176,22 +133,22 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                     <div className="md:hidden flex gap-1 pb-2.5 overflow-x-auto">
                         <Link
                             href="/admin/dashboard"
-                            className={`px-3 py-1 rounded-lg text-[13px] font-medium whitespace-nowrap transition-all ${isActive('/admin/dashboard') ? 'text-ink-primary font-semibold' : 'text-ink-tertiary'
-                                }`}
+                            className="px-3 py-1 rounded-lg text-[13px] font-medium whitespace-nowrap transition-all"
+                            style={{ color: isActive('/admin/dashboard') ? '#1D1D1F' : '#6E6E73', fontWeight: isActive('/admin/dashboard') ? 600 : 400 }}
                         >
                             儀表板
                         </Link>
                         <Link
                             href="/admin/orders"
-                            className={`px-3 py-1 rounded-lg text-[13px] font-medium whitespace-nowrap transition-all ${isActivePrefix('/admin/orders') ? 'text-ink-primary font-semibold' : 'text-ink-tertiary'
-                                }`}
+                            className="px-3 py-1 rounded-lg text-[13px] font-medium whitespace-nowrap transition-all"
+                            style={{ color: isActivePrefix('/admin/orders') ? '#1D1D1F' : '#6E6E73', fontWeight: isActivePrefix('/admin/orders') ? 600 : 400 }}
                         >
                             訂單
                         </Link>
                         <Link
                             href="/admin/products"
-                            className={`px-3 py-1 rounded-lg text-[13px] font-medium whitespace-nowrap transition-all ${isActivePrefix('/admin/products') ? 'text-ink-primary font-semibold' : 'text-ink-tertiary'
-                                }`}
+                            className="px-3 py-1 rounded-lg text-[13px] font-medium whitespace-nowrap transition-all"
+                            style={{ color: isActivePrefix('/admin/products') ? '#1D1D1F' : '#6E6E73', fontWeight: isActivePrefix('/admin/products') ? 600 : 400 }}
                         >
                             商品
                         </Link>
@@ -205,4 +162,3 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         </div>
     );
 }
-
