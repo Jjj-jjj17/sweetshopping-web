@@ -17,28 +17,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
         const checkAdmin = async () => {
             try {
-                // Wait for session to stabilize after OAuth redirect
-                await new Promise(resolve => setTimeout(resolve, 300));
-
-                let { data: { session } } = await supabase.auth.getSession();
-
-                console.log('=== ADMIN LAYOUT CHECK ===');
-                console.log('Session:', !!session);
-                console.log('Email:', session?.user?.email);
+                const { data: { session } } = await supabase.auth.getSession();
 
                 if (!session) {
-                    // Retry once — give OAuth callback time to write cookie
-                    await new Promise(resolve => setTimeout(resolve, 500));
-                    const { data: { session: retrySession } } = await supabase.auth.getSession();
-                    session = retrySession;
-                    console.log('Retry session:', !!session);
-                }
-
-                if (!session) {
-                    if (mounted) {
-                        setLoading(false);
-                        router.push('/admin/login');
-                    }
+                    // No session yet — wait for onAuthStateChange to fire (OAuth flow)
                     return;
                 }
 
@@ -46,9 +28,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 const adminEmails = (process.env.NEXT_PUBLIC_ADMIN_EMAIL || '')
                     .split(',')
                     .map((e: string) => e.trim().toLowerCase());
-
-                console.log('Admin emails:', adminEmails);
-                console.log('Is admin:', adminEmails.includes(userEmail));
 
                 if (adminEmails.includes(userEmail)) {
                     if (mounted) {
@@ -70,14 +49,13 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             }
         };
 
-        // Listen for auth state changes (e.g. sign in completing after OAuth redirect)
+        // Listen for auth state changes (handles OAuth redirect completion)
         const { data: { subscription } } = supabase.auth.onAuthStateChange(
-            (_event: string, session: any) => {
+            async (event: string, session: any) => {
                 if (!mounted) return;
 
-                if (_event === 'SIGNED_IN' && session) {
-                    // Re-check admin status when a sign-in event fires
-                    const userEmail = session.user.email?.toLowerCase() || '';
+                if (event === 'SIGNED_IN' && session?.user?.email) {
+                    const userEmail = session.user.email.toLowerCase();
                     const adminEmails = (process.env.NEXT_PUBLIC_ADMIN_EMAIL || '')
                         .split(',')
                         .map((e: string) => e.trim().toLowerCase());
@@ -85,21 +63,34 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                     if (adminEmails.includes(userEmail)) {
                         setIsAuthenticated(true);
                         setLoading(false);
+                    } else {
+                        setLoading(false);
+                        router.push('/admin/login');
                     }
-                } else if (_event === 'SIGNED_OUT') {
+                } else if (event === 'SIGNED_OUT') {
                     setIsAuthenticated(false);
                     router.push('/admin/login');
                 }
             }
         );
 
+        // Initial check for existing session
         checkAdmin();
+
+        // Fallback: if neither checkAdmin nor onAuthStateChange resolves within 3s, redirect
+        const timeout = setTimeout(() => {
+            if (mounted && loading) {
+                setLoading(false);
+                router.push('/admin/login');
+            }
+        }, 3000);
 
         return () => {
             mounted = false;
             subscription.unsubscribe();
+            clearTimeout(timeout);
         };
-    }, []); // Only run once on mount — no pathname/router dep to avoid re-triggers
+    }, []);
 
     const handleLogout = async () => {
         await supabase.auth.signOut();

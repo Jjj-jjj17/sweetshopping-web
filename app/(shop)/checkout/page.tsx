@@ -4,10 +4,6 @@ import React, { useState } from 'react';
 import { useCart } from '@/context/CartContext';
 import { supabase } from '@/lib/supabase';
 import { z } from 'zod';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { CheckCircle, Loader2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
@@ -27,13 +23,21 @@ export default function CheckoutPage() {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [errors, setErrors] = useState<Record<string, string>>({});
 
-    // Prevent access if cart is empty
+    const inputStyle = { backgroundColor: '#FFFFFF', color: '#1D1D1F', borderColor: 'rgba(0,0,0,0.12)' };
+    const labelStyle = { color: '#1D1D1F' } as const;
+
     if (items.length === 0) {
         return (
             <div className="min-h-[60vh] flex flex-col items-center justify-center text-center p-4">
-                <h1 className="text-2xl font-bold mb-2">Cart is Empty</h1>
-                <p className="text-muted-foreground mb-6">You need to add items to your cart before checking out.</p>
-                <Button onClick={() => router.push('/')}>Return to Shop</Button>
+                <h1 style={{ color: '#1D1D1F', fontSize: '24px', fontWeight: 700 }}>購物車是空的</h1>
+                <p className="mb-6 mt-2" style={{ color: '#6E6E73', fontSize: '15px' }}>請先將商品加入購物車再結帳。</p>
+                <button
+                    onClick={() => router.push('/')}
+                    className="px-6 py-2.5 rounded-xl text-[15px] font-semibold transition-colors"
+                    style={{ backgroundColor: '#FF6B6B', color: '#FFFFFF' }}
+                >
+                    返回商店
+                </button>
             </div>
         );
     }
@@ -43,13 +47,12 @@ export default function CheckoutPage() {
         setIsSubmitting(true);
         setErrors({});
 
-        // Validation
         try {
             const schema = z.object({
-                name: z.string().min(2, "Name is required"),
-                email: z.string().email("Valid email is required"),
-                phone: z.string().min(8, "Valid phone number required"),
-                address: z.string().min(10, "Full delivery address is required"),
+                name: z.string().min(2, "請輸入名字"),
+                email: z.string().email("請輸入有效的 Email"),
+                phone: z.string().min(8, "請輸入有效的電話號碼"),
+                address: z.string().min(10, "請輸入完整的取貨門市地址"),
             });
             schema.parse(formData);
         } catch (err: any) {
@@ -67,7 +70,6 @@ export default function CheckoutPage() {
         }
 
         try {
-            // Re-check stock before submission
             const productIds = items.map(i => i.productId);
             const { data: stockData, error: stockError } = await supabase
                 .from('products')
@@ -76,21 +78,16 @@ export default function CheckoutPage() {
 
             if (stockError) throw stockError;
 
-            // Validate all items
             for (const cartItem of items) {
                 const dbProduct = stockData?.find((p: { id: string, name: string, stock: number, is_available: boolean }) => p.id === cartItem.productId);
-
                 if (!dbProduct || !dbProduct.is_available) {
-                    throw new Error(`Item ${cartItem.name} is no longer available.`);
+                    throw new Error(`${cartItem.name} 已下架。`);
                 }
-
                 if (dbProduct.stock < cartItem.quantity) {
-                    throw new Error(`Not enough stock for ${cartItem.name}. Only ${dbProduct.stock} left.`);
+                    throw new Error(`${cartItem.name} 庫存不足，僅剩 ${dbProduct.stock} 件。`);
                 }
             }
 
-            // Insert Order
-            console.log("Submitting order payload...");
             const insertResponse = await supabase
                 .from('orders')
                 .insert({
@@ -98,7 +95,7 @@ export default function CheckoutPage() {
                     customer_email: formData.email,
                     customer_phone: formData.phone,
                     delivery_address: formData.address,
-                    items: items, // JSONB Array
+                    items: items,
                     total: total,
                     status: 'pending',
                     special_instructions: formData.instructions
@@ -106,25 +103,13 @@ export default function CheckoutPage() {
                 .select('id')
                 .single();
 
-            console.log("Supabase insert response:", insertResponse);
-
             const { data: orderData, error: orderError } = insertResponse;
 
-            if (orderError) {
-                console.error("Supabase Order Insert Error:", orderError);
-                throw orderError;
-            }
-
+            if (orderError) throw orderError;
             if (!orderData || !orderData.id) {
-                const missingIdError = new Error("No order ID returned from database. (May be caused by missing SELECT RLS policy on orders)");
-                console.error(missingIdError);
-                throw missingIdError;
+                throw new Error("No order ID returned from database.");
             }
 
-            console.log('Created order ID:', orderData.id);
-
-            // Decrement stock for all items
-            // Note: In a production App, RPC is safer here to prevent race conditions
             for (const cartItem of items) {
                 const dbProduct = stockData?.find((p: { id: string, name: string, stock: number, is_available: boolean }) => p.id === cartItem.productId);
                 if (dbProduct) {
@@ -135,128 +120,139 @@ export default function CheckoutPage() {
             }
 
             clearCart();
-            toast.success("Order placed successfully!");
+            toast.success("訂單已送出！");
 
-            // Short delay to allow toast to render and Supabase real-time index to catch up (if applicable)
             setTimeout(() => {
                 router.push(`/order-confirmation/${orderData.id}`);
             }, 800);
 
         } catch (err: any) {
-            console.error("Full Error Object:", err);
-            toast.error(err.message || "Order failed to submit. Please contact support.");
+            console.error("Error:", err);
+            toast.error(err.message || "訂單提交失敗，請聯繫客服。");
             setIsSubmitting(false);
         }
     };
 
     return (
-        <div className="container mx-auto px-4 py-10 max-w-4xl">
-            <h1 className="text-3xl font-extrabold mb-8">Secure Checkout</h1>
+        <div className="container mx-auto px-4 py-10 max-w-4xl" style={{ minHeight: '100vh' }}>
+            <h1 style={{ color: '#1D1D1F', fontSize: '32px', fontWeight: 800, letterSpacing: '-0.02em' }} className="mb-8">
+                安全結帳
+            </h1>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 {/* Form Column */}
                 <form onSubmit={handleSubmit} className="lg:col-span-2 space-y-6">
-                    <Card>
-                        <CardHeader>
-                            <CardTitle>Customer Details</CardTitle>
-                        </CardHeader>
-                        <CardContent className="space-y-4">
+                    {/* Customer Details */}
+                    <div className="rounded-xl p-6 space-y-4" style={{ backgroundColor: '#FFFFFF', border: '1px solid rgba(0,0,0,0.04)', boxShadow: '0 1px 3px rgba(0,0,0,0.04), 0 4px 12px rgba(0,0,0,0.05)' }}>
+                        <h2 style={{ color: '#1D1D1F', fontSize: '20px', fontWeight: 600 }}>顧客資料</h2>
+                        <div>
+                            <label className="text-[13px] font-semibold mb-1.5 block" style={labelStyle}>姓名 *</label>
+                            <input
+                                placeholder="請輸入您的姓名"
+                                value={formData.name}
+                                onChange={e => setFormData({ ...formData, name: e.target.value })}
+                                className="w-full px-3.5 py-2.5 rounded-lg text-[15px] border focus:ring-2 focus:ring-[#FF6B6B]/15 focus:border-[#FF6B6B] outline-none transition-all"
+                                style={inputStyle}
+                            />
+                            {errors.name && <p className="text-[13px] mt-1" style={{ color: '#FF3B30' }}>{errors.name}</p>}
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
-                                <Input
-                                    placeholder="Full Name"
-                                    value={formData.name}
-                                    onChange={e => setFormData({ ...formData, name: e.target.value })}
+                                <label className="text-[13px] font-semibold mb-1.5 block" style={labelStyle}>Email *</label>
+                                <input
+                                    placeholder="email@example.com"
+                                    type="email"
+                                    value={formData.email}
+                                    onChange={e => setFormData({ ...formData, email: e.target.value })}
+                                    className="w-full px-3.5 py-2.5 rounded-lg text-[15px] border focus:ring-2 focus:ring-[#FF6B6B]/15 focus:border-[#FF6B6B] outline-none transition-all"
+                                    style={inputStyle}
                                 />
-                                {errors.name && <p className="text-red-500 text-xs mt-1">{errors.name}</p>}
+                                {errors.email && <p className="text-[13px] mt-1" style={{ color: '#FF3B30' }}>{errors.email}</p>}
                             </div>
-
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div>
-                                    <Input
-                                        placeholder="Email Address"
-                                        type="email"
-                                        value={formData.email}
-                                        onChange={e => setFormData({ ...formData, email: e.target.value })}
-                                    />
-                                    {errors.email && <p className="text-red-500 text-xs mt-1">{errors.email}</p>}
-                                </div>
-                                <div>
-                                    <Input
-                                        placeholder="Phone Number"
-                                        value={formData.phone}
-                                        onChange={e => setFormData({ ...formData, phone: e.target.value })}
-                                    />
-                                    {errors.phone && <p className="text-red-500 text-xs mt-1">{errors.phone}</p>}
-                                </div>
+                            <div>
+                                <label className="text-[13px] font-semibold mb-1.5 block" style={labelStyle}>電話 *</label>
+                                <input
+                                    placeholder="0912-345-678"
+                                    value={formData.phone}
+                                    onChange={e => setFormData({ ...formData, phone: e.target.value })}
+                                    className="w-full px-3.5 py-2.5 rounded-lg text-[15px] border focus:ring-2 focus:ring-[#FF6B6B]/15 focus:border-[#FF6B6B] outline-none transition-all"
+                                    style={inputStyle}
+                                />
+                                {errors.phone && <p className="text-[13px] mt-1" style={{ color: '#FF3B30' }}>{errors.phone}</p>}
                             </div>
-                        </CardContent>
-                    </Card>
+                        </div>
+                    </div>
 
-                    <Card>
-                        <CardHeader>
-                            <CardTitle>Delivery Information</CardTitle>
-                        </CardHeader>
-                        <CardContent className="space-y-4">
-                            <label className="text-sm font-medium mb-1 block">7-ELEVEN 取貨門市地址</label>
-                            <Textarea
-                                name="address"
+                    {/* Delivery Info */}
+                    <div className="rounded-xl p-6 space-y-4" style={{ backgroundColor: '#FFFFFF', border: '1px solid rgba(0,0,0,0.04)', boxShadow: '0 1px 3px rgba(0,0,0,0.04), 0 4px 12px rgba(0,0,0,0.05)' }}>
+                        <h2 style={{ color: '#1D1D1F', fontSize: '20px', fontWeight: 600 }}>取貨資訊</h2>
+                        <div>
+                            <label className="text-[13px] font-semibold mb-1.5 block" style={labelStyle}>7-ELEVEN 取貨門市地址 *</label>
+                            <textarea
                                 placeholder="請輸入您附近的7-ELEVEN門市完整地址（例如：彰化縣彰化市中山路二段100號）"
                                 required
                                 rows={3}
                                 value={formData.address}
-                                onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setFormData({ ...formData, address: e.target.value })}
+                                onChange={e => setFormData({ ...formData, address: e.target.value })}
+                                className="w-full px-3.5 py-2.5 rounded-lg text-[15px] border focus:ring-2 focus:ring-[#FF6B6B]/15 focus:border-[#FF6B6B] outline-none transition-all leading-relaxed"
+                                style={inputStyle}
                             />
-                            <p className="text-sm text-gray-500 mt-1">
+                            <p className="text-[13px] mt-1" style={{ color: '#6E6E73' }}>
                                 訂單將配送至您指定的7-ELEVEN門市，請確保地址完整正確
                             </p>
-                            {errors.address && <p className="text-red-500 text-xs mt-1">{errors.address}</p>}
+                            {errors.address && <p className="text-[13px] mt-1" style={{ color: '#FF3B30' }}>{errors.address}</p>}
+                        </div>
 
-                            <div>
-                                <Textarea
-                                    placeholder="Special Instructions (Optional)"
-                                    rows={2}
-                                    value={formData.instructions}
-                                    onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setFormData({ ...formData, instructions: e.target.value })}
-                                />
-                            </div>
-                        </CardContent>
-                    </Card>
+                        <div>
+                            <label className="text-[13px] font-semibold mb-1.5 block" style={labelStyle}>備註（選填）</label>
+                            <textarea
+                                placeholder="特殊需求或備註..."
+                                rows={2}
+                                value={formData.instructions}
+                                onChange={e => setFormData({ ...formData, instructions: e.target.value })}
+                                className="w-full px-3.5 py-2.5 rounded-lg text-[15px] border focus:ring-2 focus:ring-[#FF6B6B]/15 focus:border-[#FF6B6B] outline-none transition-all leading-relaxed"
+                                style={inputStyle}
+                            />
+                        </div>
+                    </div>
 
-                    <Button type="submit" size="lg" className="w-full text-lg h-14" disabled={isSubmitting}>
+                    <button
+                        type="submit"
+                        className="w-full h-14 text-lg font-semibold rounded-xl flex items-center justify-center gap-2 transition-colors duration-150 disabled:opacity-60"
+                        disabled={isSubmitting}
+                        style={{ backgroundColor: '#FF6B6B', color: '#FFFFFF' }}
+                    >
                         {isSubmitting ? (
-                            <><Loader2 className="animate-spin mr-2 h-5 w-5" /> Processing...</>
+                            <><Loader2 className="animate-spin h-5 w-5" /> 處理中...</>
                         ) : (
-                            `Complete Order • $${total.toFixed(2)}`
+                            `確認下單 • $${total.toFixed(2)}`
                         )}
-                    </Button>
+                    </button>
                 </form>
 
                 {/* Summary Sidebar */}
                 <div className="lg:col-span-1">
-                    <Card className="sticky top-24 bg-secondary/20">
-                        <CardHeader className="pb-4">
-                            <CardTitle className="text-lg">Order Summary</CardTitle>
-                        </CardHeader>
-                        <CardContent className="space-y-4 text-sm max-h-[400px] overflow-y-auto">
+                    <div className="rounded-xl p-6 sticky top-24" style={{ backgroundColor: '#FFFFFF', border: '1px solid rgba(0,0,0,0.04)', boxShadow: '0 1px 3px rgba(0,0,0,0.04), 0 4px 12px rgba(0,0,0,0.05)' }}>
+                        <h2 style={{ color: '#1D1D1F', fontSize: '17px', fontWeight: 600 }} className="mb-4">訂單摘要</h2>
+                        <div className="space-y-3 text-sm max-h-[400px] overflow-y-auto">
                             {items.map(item => (
-                                <div key={item.productId} className="flex justify-between items-start gap-2 border-b border-border/50 pb-3 last:border-0 last:pb-0">
+                                <div key={item.productId} className="flex justify-between items-start gap-2 pb-3" style={{ borderBottom: '1px solid rgba(0,0,0,0.04)' }}>
                                     <div className="flex-1">
-                                        <p className="font-semibold line-clamp-1">{item.name}</p>
-                                        <p className="text-muted-foreground text-xs">Qty: {item.quantity}</p>
+                                        <p className="font-semibold line-clamp-1" style={{ color: '#1D1D1F' }}>{item.name}</p>
+                                        <p style={{ color: '#6E6E73', fontSize: '12px' }}>數量: {item.quantity}</p>
                                     </div>
-                                    <p className="font-medium whitespace-nowrap">
+                                    <p className="font-medium whitespace-nowrap" style={{ color: '#1D1D1F' }}>
                                         ${(item.price * item.quantity).toFixed(2)}
                                     </p>
                                 </div>
                             ))}
-                        </CardContent>
-                        <div className="p-6 pt-0 mt-4 border-t border-border/50">
-                            <div className="flex justify-between items-center mt-4">
-                                <span className="font-bold text-lg">Total</span>
-                                <span className="font-bold text-lg text-primary">${total.toFixed(2)}</span>
-                            </div>
                         </div>
-                    </Card>
+                        <div className="mt-4 pt-4 flex justify-between items-center" style={{ borderTop: '1px solid rgba(0,0,0,0.06)' }}>
+                            <span className="font-bold text-lg" style={{ color: '#1D1D1F' }}>總計</span>
+                            <span className="font-bold text-lg" style={{ color: '#FF6B6B' }}>${total.toFixed(2)}</span>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>

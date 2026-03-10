@@ -2,7 +2,6 @@
 
 import React from 'react';
 import { useCart } from '@/context/CartContext';
-import { Button } from '@/components/ui/button';
 import { Trash2, Minus, Plus, ArrowRight, ShoppingBag } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -13,124 +12,144 @@ export default function CartPage() {
     if (items.length === 0) {
         return (
             <div className="container mx-auto px-4 py-20 min-h-[60vh] flex flex-col items-center justify-center text-center">
-                <div className="bg-secondary/50 rounded-full p-6 mb-6">
-                    <ShoppingBag className="h-12 w-12 text-muted-foreground" />
+                <div className="rounded-full p-6 mb-6" style={{ backgroundColor: '#F5F5F7' }}>
+                    <ShoppingBag className="h-12 w-12" style={{ color: '#6E6E73' }} />
                 </div>
-                <h1 className="text-3xl font-bold tracking-tight mb-2">Your cart is empty</h1>
-                <p className="text-muted-foreground max-w-md mx-auto mb-8">
-                    Looks like you haven't added any sweet treats to your cart yet. Discover our fresh handmade desserts!
+                <h1 style={{ color: '#1D1D1F', fontSize: '24px', fontWeight: 700 }}>購物車是空的</h1>
+                <p className="max-w-md mx-auto mb-8 mt-2" style={{ color: '#6E6E73', fontSize: '15px' }}>
+                    你還沒有加入任何甜點，快去逛逛我們的新鮮手工甜點！
                 </p>
-                <Link href="/">
-                    <Button size="lg" className="px-8 shadow-sm">Start Shopping</Button>
+                <Link
+                    href="/"
+                    className="px-8 py-3 rounded-xl text-lg font-semibold transition-colors duration-150"
+                    style={{ backgroundColor: '#FF6B6B', color: '#FFFFFF' }}
+                >
+                    開始購物
                 </Link>
             </div>
         );
     }
 
     return (
-        <div className="container mx-auto px-4 py-10 max-w-5xl">
-            <h1 className="text-3xl font-extrabold tracking-tight mb-8">Shopping Cart</h1>
+        <div className="container mx-auto px-4 py-10 max-w-5xl" style={{ minHeight: '100vh' }}>
+            <h1 style={{ color: '#1D1D1F', fontSize: '32px', fontWeight: 800, letterSpacing: '-0.02em' }} className="mb-8">
+                購物車
+            </h1>
 
             <div className="flex flex-col lg:flex-row gap-10">
                 {/* Cart Items List */}
-                <div className="flex-1 space-y-6">
+                <div className="flex-1 space-y-4">
                     {items.map((item) => (
-                        <div key={item.productId} className="flex flex-col sm:flex-row items-start sm:items-center gap-4 bg-card border rounded-lg p-4 shadow-sm">
-                            <Link href={`/products/${item.productId}`} className="shrink-0 relative h-24 w-24 bg-secondary rounded-md overflow-hidden border">
+                        <div
+                            key={item.productId}
+                            className="flex flex-col sm:flex-row items-start sm:items-center gap-4 rounded-xl p-4"
+                            style={{ backgroundColor: '#FFFFFF', border: '1px solid rgba(0,0,0,0.04)', boxShadow: '0 1px 3px rgba(0,0,0,0.04), 0 4px 12px rgba(0,0,0,0.05)' }}
+                        >
+                            <Link href={`/products/${item.productId}`} className="shrink-0 relative h-24 w-24 rounded-lg overflow-hidden" style={{ border: '1px solid rgba(0,0,0,0.06)' }}>
                                 {item.image ? (
                                     <Image src={item.image} alt={item.name} fill className="object-cover" />
                                 ) : (
-                                    <div className="h-full w-full flex items-center justify-center text-muted-foreground text-xs bg-muted">No Image</div>
+                                    <div className="h-full w-full flex items-center justify-center text-xs" style={{ backgroundColor: '#F5F5F7', color: '#6E6E73' }}>No Image</div>
                                 )}
                             </Link>
 
                             <div className="flex-1 flex flex-col sm:flex-row sm:items-center justify-between w-full">
                                 <div className="space-y-1 mb-4 sm:mb-0">
-                                    <Link href={`/products/${item.productId}`} className="font-semibold text-lg hover:underline line-clamp-1">
+                                    <Link href={`/products/${item.productId}`} className="font-semibold text-lg hover:underline line-clamp-1" style={{ color: '#1D1D1F' }}>
                                         {item.name}
                                     </Link>
-                                    <p className="text-sm font-medium text-muted-foreground">
-                                        ${Number(item.price).toFixed(2)} each
+                                    <p style={{ color: '#6E6E73', fontSize: '13px' }}>
+                                        ${Number(item.price).toFixed(2)} / 件
                                     </p>
                                 </div>
 
                                 <div className="flex items-center justify-between sm:justify-end gap-6 w-full sm:w-auto">
                                     {/* Quantity Adjuster */}
-                                    <div className="flex items-center border rounded-md overflow-hidden bg-background">
+                                    <div className="flex items-center rounded-lg overflow-hidden" style={{ border: '1px solid rgba(0,0,0,0.12)' }}>
                                         <button
                                             onClick={() => updateQuantity(item.productId, item.quantity - 1)}
                                             disabled={item.quantity <= 1}
-                                            className="px-2 py-1 sm:px-3 sm:py-2 hover:bg-secondary disabled:opacity-50 transition-colors"
+                                            className="px-2 py-1 sm:px-3 sm:py-2 disabled:opacity-50 transition-colors"
+                                            style={{ backgroundColor: '#F5F5F7', color: '#1D1D1F' }}
                                         >
                                             <Minus className="h-3 w-3 sm:h-4 sm:w-4" />
                                         </button>
-                                        <div className="px-3 py-1 sm:px-4 sm:py-2 font-semibold text-sm sm:text-base min-w-[2.5rem] sm:min-w-[3rem] text-center border-x">
+                                        <div
+                                            className="px-3 py-1 sm:px-4 sm:py-2 font-semibold text-sm sm:text-base min-w-[2.5rem] sm:min-w-[3rem] text-center"
+                                            style={{ color: '#1D1D1F', borderLeft: '1px solid rgba(0,0,0,0.12)', borderRight: '1px solid rgba(0,0,0,0.12)', backgroundColor: '#FFFFFF' }}
+                                        >
                                             {item.quantity}
                                         </div>
                                         <button
                                             onClick={() => updateQuantity(item.productId, item.quantity + 1)}
-                                            disabled={item.quantity >= 10} // Absolute hard limit to prevent hoarding here
-                                            className="px-2 py-1 sm:px-3 sm:py-2 hover:bg-secondary disabled:opacity-50 transition-colors"
+                                            disabled={item.quantity >= 10}
+                                            className="px-2 py-1 sm:px-3 sm:py-2 disabled:opacity-50 transition-colors"
+                                            style={{ backgroundColor: '#F5F5F7', color: '#1D1D1F' }}
                                         >
                                             <Plus className="h-3 w-3 sm:h-4 sm:w-4" />
                                         </button>
                                     </div>
 
                                     {/* Line Total */}
-                                    <div className="font-bold w-[70px] text-right">
+                                    <div className="font-bold w-[70px] text-right" style={{ color: '#1D1D1F' }}>
                                         ${(item.price * item.quantity).toFixed(2)}
                                     </div>
 
-                                    <Button
-                                        variant="ghost"
-                                        size="icon"
-                                        className="text-muted-foreground hover:text-destructive hover:bg-red-50"
+                                    <button
+                                        className="p-2 rounded-lg transition-colors"
                                         onClick={() => removeFromCart(item.productId)}
                                         aria-label="Remove item"
+                                        style={{ color: '#6E6E73' }}
                                     >
                                         <Trash2 className="h-4 w-4" />
-                                    </Button>
+                                    </button>
                                 </div>
                             </div>
                         </div>
                     ))}
 
                     <div className="flex justify-start">
-                        <Button variant="ghost" className="text-muted-foreground" onClick={clearCart}>
-                            Clear Cart
-                        </Button>
+                        <button
+                            className="text-[15px] font-medium px-4 py-2 rounded-lg transition-colors"
+                            onClick={clearCart}
+                            style={{ color: '#6E6E73' }}
+                        >
+                            清空購物車
+                        </button>
                     </div>
                 </div>
 
                 {/* Order Summary */}
                 <div className="w-full lg:w-[350px] shrink-0">
-                    <div className="bg-secondary/30 rounded-xl p-6 border sticky top-24">
-                        <h2 className="text-xl font-bold mb-4">Order Summary</h2>
+                    <div className="rounded-xl p-6 sticky top-24" style={{ backgroundColor: '#FFFFFF', border: '1px solid rgba(0,0,0,0.04)', boxShadow: '0 1px 3px rgba(0,0,0,0.04), 0 4px 12px rgba(0,0,0,0.05)' }}>
+                        <h2 style={{ color: '#1D1D1F', fontSize: '20px', fontWeight: 700 }} className="mb-4">訂單摘要</h2>
 
                         <div className="space-y-3 mb-6 text-sm">
-                            <div className="flex justify-between text-muted-foreground">
-                                <span>Subtotal</span>
-                                <span>${total.toFixed(2)}</span>
+                            <div className="flex justify-between">
+                                <span style={{ color: '#6E6E73' }}>小計</span>
+                                <span style={{ color: '#1D1D1F' }}>${total.toFixed(2)}</span>
                             </div>
-                            <div className="flex justify-between text-muted-foreground">
-                                <span>Shipping</span>
-                                <span>Calculated at checkout</span>
+                            <div className="flex justify-between">
+                                <span style={{ color: '#6E6E73' }}>運費</span>
+                                <span style={{ color: '#6E6E73' }}>結帳時計算</span>
                             </div>
-                            <div className="border-t pt-3 flex justify-between font-bold text-lg">
-                                <span>Total</span>
-                                <span>${total.toFixed(2)}</span>
+                            <div className="flex justify-between font-bold text-lg pt-3" style={{ borderTop: '1px solid rgba(0,0,0,0.06)' }}>
+                                <span style={{ color: '#1D1D1F' }}>總計</span>
+                                <span style={{ color: '#1D1D1F' }}>${total.toFixed(2)}</span>
                             </div>
                         </div>
 
-                        <Link href="/checkout" className="block w-full">
-                            <Button size="lg" className="w-full shadow-sm text-base h-12">
-                                Proceed to Checkout
-                                <ArrowRight className="h-4 w-4 ml-2" />
-                            </Button>
+                        <Link
+                            href="/checkout"
+                            className="flex items-center justify-center gap-2 w-full h-12 rounded-xl text-base font-semibold transition-colors duration-150"
+                            style={{ backgroundColor: '#FF6B6B', color: '#FFFFFF' }}
+                        >
+                            前往結帳
+                            <ArrowRight className="h-4 w-4" />
                         </Link>
 
-                        <p className="text-xs text-center text-muted-foreground mt-4">
-                            Taxes and shipping calculated at checkout
+                        <p className="text-xs text-center mt-4" style={{ color: '#6E6E73' }}>
+                            稅金和運費將在結帳時計算
                         </p>
                     </div>
                 </div>
