@@ -108,6 +108,13 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                                 >
                                     商品管理
                                 </Link>
+                                <Link
+                                    href="/admin/content"
+                                    className="px-4 py-1.5 rounded-lg text-[15px] transition-all duration-150"
+                                    style={{ color: isActivePrefix('/admin/content') ? '#1D1D1F' : '#6E6E73', fontWeight: isActivePrefix('/admin/content') ? 600 : 400 }}
+                                >
+                                    內容管理
+                                </Link>
                             </div>
                         </div>
                         <div className="flex items-center gap-3">
@@ -151,6 +158,13 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                             style={{ color: isActivePrefix('/admin/products') ? '#1D1D1F' : '#6E6E73', fontWeight: isActivePrefix('/admin/products') ? 600 : 400 }}
                         >
                             商品
+                        </Link>
+                        <Link
+                            href="/admin/content"
+                            className="px-3 py-1 rounded-lg text-[13px] font-medium whitespace-nowrap transition-all"
+                            style={{ color: isActivePrefix('/admin/content') ? '#1D1D1F' : '#6E6E73', fontWeight: isActivePrefix('/admin/content') ? 600 : 400 }}
+                        >
+                            內容
                         </Link>
                     </div>
                 </div>
