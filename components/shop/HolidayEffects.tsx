@@ -110,11 +110,11 @@ export default function HolidayEffects({ mode, manualHoliday }: { mode: string; 
           100% { transform: translateY(110vh) translateX(var(--drift)) rotate(var(--rotate)); opacity: 0; }
         }
         @keyframes float {
-          0% { transform: translateY(110vh) translateX(0) rotate(0deg); opacity: 0; }
+          0% { transform: translateY(0) translateX(0) rotate(0deg); opacity: 0; }
           10% { opacity: 0.9; }
-          50% { transform: translateY(50vh) translateX(var(--drift)) rotate(180deg); }
+          50% { transform: translateY(-50vh) translateX(var(--drift)) rotate(180deg); }
           90% { opacity: 0.7; }
-          100% { transform: translateY(-60px) translateX(calc(var(--drift) * 2)) rotate(360deg); opacity: 0; }
+          100% { transform: translateY(-110vh) translateX(calc(var(--drift) * 2)) rotate(360deg); opacity: 0; }
         }
         .holiday-particle {
           position: fixed;
