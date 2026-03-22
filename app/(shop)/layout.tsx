@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { CartProvider } from '@/context/CartContext';
 import { LanguageProvider, useLanguage } from '@/context/LanguageContext';
 import { CartBadge } from '@/components/shop/CartBadge';
+import HolidayEffectsLoader from '@/components/shop/HolidayEffectsLoader';
 
 function LanguageSwitcher() {
     const { locale, setLocale } = useLanguage();
@@ -91,6 +92,7 @@ export default function ShopLayout({ children }: { children: React.ReactNode }) 
         <LanguageProvider>
             <CartProvider>
                 <div className="flex min-h-screen flex-col">
+                    <HolidayEffectsLoader />
                     <ShopHeader />
                     <main className="flex-1">
                         {children}
