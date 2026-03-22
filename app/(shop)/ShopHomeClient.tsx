@@ -21,11 +21,12 @@ export default function ShopHomeClient({ initialProducts, siteContent = {} }: Sh
     const [searchTerm, setSearchTerm] = useState('');
 
     // Dynamic content: DB values override language translations
-    const heroTitle = siteContent.hero_title || t('hero.title1');
-    const heroTitle2 = siteContent.hero_title2 || t('hero.title2');
-    const heroSubtitle = siteContent.hero_subtitle || t('hero.subtitle');
-    const heroBadge = siteContent.hero_badge || t('hero.badge');
-    const heroAnnouncement = siteContent.hero_announcement || '';
+    // Actual DB keys: shop_hero_title, shop_hero_subtitle, shop_announcement
+    const heroTitle = siteContent.shop_hero_title || t('hero.title1');
+    const heroTitle2 = siteContent.shop_hero_title2 || t('hero.title2');
+    const heroSubtitle = siteContent.shop_hero_subtitle || t('hero.subtitle');
+    const heroBadge = siteContent.shop_hero_badge || t('hero.badge');
+    const heroAnnouncement = siteContent.shop_announcement || '';
 
     const categories = useMemo(() => {
         const cats = new Set(initialProducts.map(p => p.category).filter(Boolean));
