@@ -9,15 +9,23 @@ import { useLanguage } from '@/context/LanguageContext';
 
 interface ShopHomeClientProps {
     initialProducts: Product[];
+    siteContent?: Record<string, string>;
 }
 
-export default function ShopHomeClient({ initialProducts }: ShopHomeClientProps) {
+export default function ShopHomeClient({ initialProducts, siteContent = {} }: ShopHomeClientProps) {
     const searchParams = useSearchParams();
     const router = useRouter();
     const { t } = useLanguage();
 
     const urlCategory = searchParams.get('category') || 'All';
     const [searchTerm, setSearchTerm] = useState('');
+
+    // Dynamic content: DB values override language translations
+    const heroTitle = siteContent.hero_title || t('hero.title1');
+    const heroTitle2 = siteContent.hero_title2 || t('hero.title2');
+    const heroSubtitle = siteContent.hero_subtitle || t('hero.subtitle');
+    const heroBadge = siteContent.hero_badge || t('hero.badge');
+    const heroAnnouncement = siteContent.hero_announcement || '';
 
     const categories = useMemo(() => {
         const cats = new Set(initialProducts.map(p => p.category).filter(Boolean));
@@ -53,6 +61,13 @@ export default function ShopHomeClient({ initialProducts }: ShopHomeClientProps)
 
     return (
         <div className="w-full min-h-screen bg-[#F5F5F7]">
+            {/* Announcement Banner */}
+            {heroAnnouncement && (
+                <div style={{ backgroundColor: '#FF6B6B', color: '#FFFFFF', textAlign: 'center', padding: '10px 16px', fontSize: '14px', fontWeight: 500 }}>
+                    {heroAnnouncement}
+                </div>
+            )}
+
             {/* Hero Section */}
             <section className="relative overflow-hidden py-20 md:py-28 px-4">
                 <div className="absolute inset-0 bg-gradient-to-b from-cream-100 via-cream-50 to-[#F5F5F7]" />
@@ -61,16 +76,16 @@ export default function ShopHomeClient({ initialProducts }: ShopHomeClientProps)
                 <div className="relative container mx-auto text-center space-y-8 max-w-3xl">
                     <div className="inline-flex items-center gap-2 bg-white/80 backdrop-blur-sm px-4 py-2 rounded-full text-sm font-medium text-[#6E6E73] shadow-card">
                         <Sparkles className="h-4 w-4 text-[#FF6B6B]" />
-                        {t('hero.badge')}
+                        {heroBadge}
                     </div>
 
                     <h1 className="text-5xl md:text-7xl font-extrabold tracking-tight" style={{ color: '#1D1D1F' }}>
-                        {t('hero.title1')}
-                        <span className="block mt-2" style={{ color: '#FF6B6B' }}>{t('hero.title2')}</span>
+                        {heroTitle}
+                        <span className="block mt-2" style={{ color: '#FF6B6B' }}>{heroTitle2}</span>
                     </h1>
 
                     <p className="text-lg md:text-xl max-w-xl mx-auto leading-relaxed" style={{ color: '#6E6E73' }}>
-                        {t('hero.subtitle')}
+                        {heroSubtitle}
                     </p>
 
                     {/* Search Bar */}
